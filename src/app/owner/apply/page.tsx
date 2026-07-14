@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { uploadImage } from "@/lib/uploadImage";
 import { AppConfig } from "@/lib/config";
 import { FormField, SubmitButton } from "@/components/AuthCard";
+import { FileInput } from "@/components/FileInput";
 
 export default function OwnerApplyPage() {
   const router = useRouter();
@@ -192,15 +193,7 @@ export default function OwnerApplyPage() {
           </label>
         </div>
 
-        <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-dark-ink">사업자등록증 이미지 (선택)</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setLicenseFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm"
-          />
-        </label>
+        <FileInput label="사업자등록증 이미지 (선택)" onChange={setLicenseFile} />
 
         {error && <p className="text-sm font-medium text-error">{error}</p>}
         <SubmitButton loading={submitting}>신청하기</SubmitButton>

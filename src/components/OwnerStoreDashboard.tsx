@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImage } from "@/lib/uploadImage";
 import { AppConfig } from "@/lib/config";
+import { FileInput } from "@/components/FileInput";
 import type { MenuItem, Restaurant } from "@/types/database";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -345,8 +346,8 @@ function MenuForm({
             </option>
           ))}
         </select>
-        <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} className="text-sm" />
       </div>
+      <FileInput label="메뉴 이미지" onChange={setImageFile} />
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}

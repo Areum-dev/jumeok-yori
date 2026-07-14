@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { uploadImage } from "@/lib/uploadImage";
 import { AppConfig } from "@/lib/config";
 import { FormField, SubmitButton } from "@/components/AuthCard";
+import { FileInput } from "@/components/FileInput";
 import type { Restaurant } from "@/types/database";
 
 export default function EditRestaurantPage() {
@@ -158,10 +159,7 @@ export default function EditRestaurantPage() {
           </label>
         </div>
 
-        <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-dark-ink">대표 이미지</span>
-          <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} className="block w-full text-sm" />
-        </label>
+        <FileInput label="대표 이미지" onChange={setImageFile} />
 
         {error && <p className="text-sm font-medium text-error">{error}</p>}
         {done && <p className="text-sm font-medium text-success">저장되었습니다.</p>}

@@ -78,11 +78,11 @@ export default async function Home() {
           <div className="w-full max-w-sm shrink-0">
             <div className="overflow-hidden rounded-3xl border border-soft-gray bg-white p-6 shadow-sm">
               <Image
-                src="/logo.jpg"
+                src="/logo-square.png"
                 alt="주먹요리 로고"
                 width={400}
                 height={400}
-                className="mx-auto h-40 w-40 rounded-2xl object-cover"
+                className="mx-auto h-40 w-40 object-contain"
                 priority
               />
               <div className="mt-4 space-y-2 text-center">

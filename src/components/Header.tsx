@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -32,7 +33,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-soft-gray bg-ivory/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-lg font-extrabold text-dark-ink">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange text-white">주</span>
+          <Image src="/logo-square.png" alt="주먹요리" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
           주먹요리
         </Link>
 

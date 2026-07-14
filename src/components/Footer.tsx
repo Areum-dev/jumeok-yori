@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AppConfig } from "@/lib/config";
 
 const LEGAL_LINKS = [
@@ -15,9 +16,7 @@ export function Footer() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-base font-extrabold text-dark-ink">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange text-sm text-white">
-                주
-              </span>
+              <Image src="/logo-square.png" alt="주먹요리" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
               주먹요리
             </div>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-text-gray">

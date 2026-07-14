@@ -17,8 +17,11 @@
   **"부팔라 리스토란테 피제리아"** 의 이름, 주소, 전화번호, 영업시간, 소개, 포장/배달 가능 여부가
   정확히 렌더링됨을 확인했습니다. → **Flutter 앱과 동일한 데이터베이스를 사용한다는 것을 실증**
 - REST API(anon key)로 실제 테이블 상태를 조회해 스키마 문서를 작성함 (아래 SUPABASE_SCHEMA.md 참고)
-- Naver Geocoding API를 서버 라우트를 통해 실제 호출 → **401 "구독 필요" 오류 발생을 실제로 확인**
-  (코드 문제가 아니라 Naver Cloud Platform 계정의 API 구독 상태 문제로 판단, ENVIRONMENT_VARIABLES.md에 기록)
+- Naver Geocoding API를 서버 라우트를 통해 실제 호출 → 처음엔 401 "구독 필요" 오류 발생.
+  콘솔 서비스/결제 설정을 모두 확인한 뒤 두 도메인을 직접 비교 테스트해 **원인이 Naver Cloud
+  Platform의 Maps API 도메인 이전**(`naveropenapi.apigw.ntruss.com` → `maps.apigw.ntruss.com`)
+  임을 밝혀내고 `src/app/api/geocode/route.ts` 를 수정 → 실제 주소로 정상 좌표 반환 확인
+  (자세한 내용은 ENVIRONMENT_VARIABLES.md 참고)
 
 ### 라우트 응답 코드 확인 (curl)
 
@@ -52,14 +55,20 @@
 않기 위해 의도적으로 실행하지 않았습니다.** (예: 실제 계정 생성 후 삭제 API로 정리하는 방법도
 검토했으나, 이메일 인증이 켜져 있어 API만으로는 로그인까지 완결할 수 없었습니다.)
 
-## 알려진 제약사항 (코드가 아니라 외부 설정 문제)
+## 알려진 제약사항 및 배포 후 발견/해결한 이슈
 
-1. **Naver Geocoding / Web Dynamic Map**: 현재 Naver Cloud Platform 계정 설정상
-   API 호출이 거부됩니다("구독 필요"). 주먹지도는 이 경우 자동으로 목록 보기로 대체되므로
-   서비스 자체는 동작하지만, 지도 시각화와 주소 검색 기반 위치 설정은 활성화 전까지 제한됩니다.
-2. **`analytics_events` 테이블 미생성**: 사장님 대시보드 통계가 오류 없이 0으로 표시됩니다
-   (`try/catch`로 방어됨). `supabase/migrations_web.sql` 실행 후 정상 집계됩니다.
-3. **Storage 버킷 미생성**: 이미지 업로드 시 오류가 발생합니다. 동일하게 마이그레이션 실행 후 해결됩니다.
+1. ~~**Naver Geocoding**~~ → **해결됨(2026-07-14)**. NCP가 Maps API 도메인을 이전한 것이 원인이었고
+   `src/app/api/geocode/route.ts` 를 새 도메인으로 수정해 정상 동작 확인. 자세한 내용은
+   ENVIRONMENT_VARIABLES.md 참고.
+2. **가게 좌표 오류 실사례 발견 및 수정 기능 추가**: 운영 데이터 중 "부팔라 리스토란테 피제리아"의
+   주소는 과천시인데 좌표는 강남역 기본값으로 저장되어 있던 것을 발견. 기존에는 이미 승인된 가게의
+   좌표를 고칠 UI가 없어서, `/admin/restaurants`에 좌표 수동 수정 + 주소 기반 재조회 기능을 추가함.
+3. **`analytics_events` 테이블 / `restaurants.image_url` 컬럼**: 2026-07-14 재확인 결과 이미 생성되어
+   있음(운영자가 `migrations_web.sql`을 실행한 것으로 보입니다).
+4. **Storage 버킷(`menu-images`, `business-licenses`)**: 2026-07-14 재확인 결과 **아직 생성되지
+   않음**. `migrations_web.sql` 중 Storage 버킷 생성 부분만 별도로 다시 실행이 필요합니다
+   (SQL Editor에서 파일 전체를 다시 실행해도 안전합니다 — `ON CONFLICT DO NOTHING` 처리되어 있음).
+   이 상태에서는 메뉴/가게 이미지, 사업자등록증 업로드 시 오류가 발생합니다.
 
 ## 회귀 테스트 (기존 Flutter 앱)
 

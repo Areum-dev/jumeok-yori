@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 /**
  * 주소 → 좌표 변환 (Naver Geocoding API 프록시).
  * Client Secret 을 서버에만 보관하기 위해 브라우저가 직접 호출하지 않고 이 라우트를 거칩니다.
- * jumeok_yori(Flutter) naver_geocoding_service.dart 와 동일한 엔드포인트를 사용합니다.
+ *
+ * 주의: jumeok_yori(Flutter) naver_geocoding_service.dart 는 구 도메인
+ * (naveropenapi.apigw.ntruss.com)을 사용하지만, 실제 운영 계정에서는 이 도메인이
+ * "구독 필요(401)" 오류를 반환하는 것을 확인했습니다. 네이버 클라우드 플랫폼이
+ * Maps API를 새 도메인(maps.apigw.ntruss.com)으로 이전한 것으로 보이며, 새 도메인은
+ * 정상 동작을 확인했습니다. Flutter 앱도 추후 같은 문제를 겪을 수 있어 참고가 필요합니다.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,11 +27,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${encodeURIComponent(query)}`;
+    const url = `https://maps.apigw.ntruss.com/map-geocode/v2/geocode?query=${encodeURIComponent(query)}`;
     const res = await fetch(url, {
       headers: {
-        "X-NCP-APIGW-API-KEY-ID": clientId,
-        "X-NCP-APIGW-API-KEY": clientSecret,
+        "x-ncp-apigw-api-key-id": clientId,
+        "x-ncp-apigw-api-key": clientSecret,
       },
       cache: "no-store",
     });

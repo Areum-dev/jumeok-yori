@@ -13,19 +13,21 @@
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | 공개 | 고객지원/계정삭제 문의 이메일 | 기본값 `1vpdrnls@gmail.com` |
 | `NEXT_PUBLIC_SITE_URL` | 공개 | 배포 도메인 (메타데이터, sitemap, robots.txt) | 로컬: `http://localhost:3000`, 운영: 실제 배포 URL로 교체 |
 
-## 확인 필요 (운영자 조치 필요)
+## 해결된 이슈: Naver Geocoding 도메인 변경 (2026-07-14)
 
-로컬에서 테스트한 결과, 현재 Naver Cloud Platform 자격 증명으로 지오코딩 API 호출 시
-`"Permission Denied: A subscription to the API is required."` (401) 오류가 발생했습니다.
-Flutter 앱과 동일한 키를 사용했음에도 발생한 것으로 보아 **코드 문제가 아니라 Naver Cloud Platform
-콘솔에서 Geocoding/Web Dynamic Map 서비스 구독이 활성화되어 있지 않거나 만료된 것으로 보입니다.**
+처음엔 `naveropenapi.apigw.ntruss.com` (jumeok_yori Flutter 앱과 동일 도메인)으로 호출했으나
+운영 계정에서 `"Permission Denied: A subscription to the API is required."` (401) 오류가 계속
+발생했습니다. 콘솔에서 Web Dynamic Map/Geocoding 서비스와 결제 수단을 모두 확인한 뒤에도
+동일한 오류가 나서 두 도메인을 직접 비교 테스트한 결과, **Naver Cloud Platform이 Maps API를
+새 도메인(`maps.apigw.ntruss.com`)으로 이전한 것으로 확인**되었습니다. 새 도메인 + 소문자 헤더
+(`x-ncp-apigw-api-key-id`, `x-ncp-apigw-api-key`)로 호출하니 정상 동작했습니다.
 
-조치 방법:
-1. https://console.ncloud.com 로그인 → AI·Application Service → Maps
-2. 사용 중인 Application(Client ID: `gtc1th04fc`)에 "Geocoding" 과 "Web Dynamic Map" 서비스가
-   활성화되어 있는지, 결제 수단이 유효한지 확인
-3. 활성화 후 재테스트. 활성화 전까지는 웹에서 지도가 자동으로 목록 보기로 대체되고,
-   주소 검색으로 기준 위치를 잡는 기능은 오류 메시지를 보여줍니다(GPS 기반 위치와 강남역 기본 위치는 정상 동작).
+`src/app/api/geocode/route.ts` 를 새 도메인으로 수정해 반영했습니다.
+
+**Flutter 앱(`jumeok_yori/lib/services/naver_geocoding_service.dart`)은 여전히 구 도메인을
+사용 중이므로, 같은 문제를 겪고 있을 가능성이 있습니다.** 앱 쪽도 도메인을
+`https://maps.apigw.ntruss.com/map-geocode/v2/geocode` 로 바꾸는 것을 검토해보세요
+(이번 작업 범위상 Flutter 코드는 수정하지 않았습니다).
 
 ## Vercel에 설정할 환경변수
 

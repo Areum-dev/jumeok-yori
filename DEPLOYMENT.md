@@ -20,11 +20,11 @@ GitHub CLI(`gh`)와 저장된 GitHub 자격증명이 없어 자동으로 원격 
 
 ## 방법 A: Vercel 웹사이트로 배포 (권장, GitHub 필요)
 
-1. GitHub에 새 저장소를 만듭니다 (예: `jumeok-yori-web`).
-2. 아래 명령으로 이 프로젝트를 푸시합니다 (터미널에서 `jumeok-yori-web` 폴더 안에서 실행):
+1. GitHub에 새 저장소를 만듭니다 (예: `jumeok_yori_web`).
+2. 아래 명령으로 이 프로젝트를 푸시합니다 (터미널에서 `jumeok_yori_web` 폴더 안에서 실행):
 
    ```bash
-   git remote add origin https://github.com/<본인계정>/jumeok-yori-web.git
+   git remote add origin https://github.com/<본인계정>/jumeok_yori_web.git
    git branch -M main
    git push -u origin main
    ```
@@ -36,7 +36,7 @@ GitHub CLI(`gh`)와 저장된 GitHub 자격증명이 없어 자동으로 원격 
 5. **Environment Variables** 에 [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) 의 7개 값을 모두 입력
    (`SUPABASE_SERVICE_ROLE_KEY`, `NAVER_MAP_CLIENT_SECRET` 은 Sensitive 체크)
 6. **Deploy** 클릭
-7. 배포 완료 후 발급된 도메인(예: `https://jumeok-yori-web.vercel.app`)을 확인합니다.
+7. 배포 완료 후 발급된 도메인(예: `https://jumeok_yori_web.vercel.app`)을 확인합니다.
 8. `NEXT_PUBLIC_SITE_URL` 환경변수를 방금 발급된 실제 도메인으로 다시 설정하고 재배포합니다.
 
 ## 방법 B: 다른 PC/환경에서 Vercel CLI 사용
@@ -45,7 +45,7 @@ GitHub CLI(`gh`)와 저장된 GitHub 자격증명이 없어 자동으로 원격 
 
 ```bash
 npm install -g vercel
-cd jumeok-yori-web
+cd jumeok_yori_web
 vercel login
 vercel link
 vercel env add   # 환경변수 7개를 순서대로 입력

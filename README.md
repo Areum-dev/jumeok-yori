@@ -1,9 +1,9 @@
-# 주먹요리 웹 (jumeok-yori-web)
+# 주먹요리 웹 (jumeok_yori_web)
 
 "주는 대로 먹는 요리" — 주먹요리의 반응형 웹 서비스입니다. **기존 Flutter 앱(`jumeok_yori`)과 완전히 동일한
 Supabase 프로젝트**를 사용하며, 웹과 앱은 같은 사용자 계정·데이터베이스·Storage를 공유하는 하나의 서비스입니다.
 
-- 실제 프로젝트 경로: `C:\Users\dlwor\Desktop\이재경\개인\사업\2.주먹요리\jumeok-yori-web`
+- 실제 프로젝트 경로: `C:\Users\dlwor\Desktop\이재경\개인\사업\2.주먹요리\jumeok_yori_web`
 - Flutter 앱 경로(참고): `C:\Users\dlwor\Desktop\이재경\개인\사업\2.주먹요리\jumeok_yori`
 
 ## 기술 스택

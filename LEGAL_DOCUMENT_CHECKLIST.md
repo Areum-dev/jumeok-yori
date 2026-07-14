@@ -36,7 +36,7 @@
 
 이 항목들이 채워지면 `jumeok_yori/lib/legal/*.md` 원본만 수정하면 됩니다. 웹은 해당 파일을
 `src/content/legal/` 로 복사해 그대로 렌더링하므로, **원본을 수정한 뒤 해당 파일을 다시
-`jumeok-yori-web/src/content/legal/` 로 복사하고 재배포**하면 반영됩니다.
+`jumeok_yori_web/src/content/legal/` 로 복사하고 재배포**하면 반영됩니다.
 
 ## 각 문서에 이미 포함되어 있는 필수 항목 확인
 

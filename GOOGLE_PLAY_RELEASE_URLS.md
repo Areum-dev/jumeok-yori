@@ -2,7 +2,7 @@
 
 > **주의**: 아직 실제 배포가 완료되지 않아 `{DOMAIN}` 부분은 자리표시자입니다.
 > [DEPLOYMENT.md](./DEPLOYMENT.md) 안내대로 배포를 완료한 뒤, `{DOMAIN}` 을 실제 도메인
-> (예: `jumeok-yori-web.vercel.app`)으로 바꿔 아래 URL을 사용하세요. 모든 페이지는
+> (예: `jumeok_yori_web.vercel.app`)으로 바꿔 아래 URL을 사용하세요. 모든 페이지는
 > **로그인 없이** 접근 가능하며 PDF가 아닌 일반 웹페이지입니다.
 
 ## 1. Google Play Console에 입력할 URL

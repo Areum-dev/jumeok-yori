@@ -3,11 +3,11 @@
 ## 1. 준비물
 
 - Node.js 20.9 이상 (설치되어 있음: `node -v`로 확인)
-- 이 저장소를 내려받은 폴더: `jumeok-yori-web`
+- 이 저장소를 내려받은 폴더: `jumeok_yori_web`
 
 ## 2. 패키지 설치
 
-터미널에서 `jumeok-yori-web` 폴더로 이동한 뒤:
+터미널에서 `jumeok_yori_web` 폴더로 이동한 뒤:
 
 ```bash
 npm install

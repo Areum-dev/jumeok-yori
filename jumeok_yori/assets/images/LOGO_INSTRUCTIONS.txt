@@ -1,0 +1,4 @@
+로고 파일 위치: assets/images/logo-square.png
+2026-07-14: 웹(jumeok_yori_web)과 동일한 새 로고로 교체됨.
+이 폴더에 logo-square.png 파일을 넣어주세요.
+파일이 없으면 스플래시/로그인/홈에서 텍스트 로고가 표시됩니다.

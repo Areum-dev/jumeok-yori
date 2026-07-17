@@ -290,13 +290,14 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
           child: OutlinedButton.icon(
             icon: const Icon(Icons.directions, size: 16),
             label: const Text('길찾기', style: TextStyle(fontSize: 13)),
-            onPressed: () => MapLauncherService.openNaverDirectionsOrSearch(
+            onPressed: () => MapLauncherService.openDirections(
               restaurantName: r.name,
               menuName: r.name,
               address: r.address,
               lat: r.lat,
               lng: r.lng,
               recommendationType: 'registered',
+              context: context,
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.orange,

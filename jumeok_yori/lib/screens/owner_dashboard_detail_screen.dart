@@ -66,7 +66,7 @@ class _OwnerDashboardDetailScreenState
           Icons.visibility_outlined),
       _Item('전체 조회', '${s.totalRestaurantViews}', '누적 가게 조회',
           Icons.visibility_rounded),
-      _Item('길찾기', '${s.totalDirectionClicks}', '네이버지도 이동',
+      _Item('길찾기', '${s.totalDirectionClicks}', '지도 앱으로 이동',
           Icons.directions_outlined),
       _Item('저장', '${s.savedCount}', '저장된 횟수', Icons.bookmark_outline),
       _Item('공유', '${s.sharedCount}', '공유된 횟수', Icons.share_outlined),

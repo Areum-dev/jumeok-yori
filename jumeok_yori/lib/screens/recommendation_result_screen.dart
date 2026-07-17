@@ -233,7 +233,7 @@ class _RegisteredView extends StatelessWidget {
             Navigator.pop(context);
             Navigator.pushNamed(context, '/draw-loading');
           },
-          onMap: () => MapLauncherService.openNaverDirectionsOrSearch(
+          onMap: () => MapLauncherService.openDirections(
             restaurantName: r?.name,
             menuName: menu.name,
             address: r?.address,
@@ -327,14 +327,14 @@ class _StarterView extends StatelessWidget {
             Navigator.pop(context);
             Navigator.pushNamed(context, '/draw-loading');
           },
-          onMap: () => MapLauncherService.openNaverDirectionsOrSearch(
+          onMap: () => MapLauncherService.openDirections(
             menuName: menu.searchKeyword ?? menu.name,
             recommendationType: 'starter',
             context: context,
           ),
           onShare: () => ShareService.shareRecommendation(result),
           onReport: () => _handleReport(context, result),
-          mapLabel: '네이버지도에서 찾기',
+          mapLabel: '지도에서 찾기',
         ),
       ],
     );

@@ -93,13 +93,14 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     restaurantId: r.id,
                     ownerId: r.ownerId,
                   );
-                  MapLauncherService.openNaverDirectionsOrSearch(
+                  MapLauncherService.openDirections(
                     restaurantName: r.name,
                     menuName: r.name,
                     address: r.address,
                     lat: r.lat,
                     lng: r.lng,
                     recommendationType: 'registered',
+                    context: context,
                   );
                 },
               ),

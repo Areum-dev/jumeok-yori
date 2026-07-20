@@ -52,6 +52,10 @@ class MapLauncherService {
       // choice == naver: 아래 공통 로직으로 진행
     }
 
+    // 위 iOS 선택창에서 await 가 발생했을 수 있으므로, context 를 넘기기 전
+    // 위젯이 여전히 화면에 있는지 다시 확인한다 (async gap 이후 context 사용 방지).
+    if (context != null && !context.mounted) return;
+
     await _openNaverOrFallback(
       restaurantName: restaurantName,
       menuName: menuName,

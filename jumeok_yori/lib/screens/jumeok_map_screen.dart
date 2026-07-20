@@ -15,6 +15,14 @@ import '../theme/app_theme.dart';
 import '../widgets/store_marker_preview_card.dart';
 import 'restaurant_detail_screen.dart';
 
+/// 사용자 위치 확인 진행 상태.
+/// checking: 권한/위치 조회 중 (아직 강남역 등 어떤 위치도 "사용자 위치"로 보여주지 않음)
+/// resolved: 실제 GPS 위치 확보 성공
+/// denied / deniedForever / serviceDisabled / timeout: 실패 사유별 상태.
+/// 이 4가지 실패 상태에서만 AppConfig.defaultLat/defaultLng ("기본 지도 위치")를
+/// 사용하며, 이때는 반드시 화면에 기본 위치임을 명확히 표시한다.
+enum _LocationPhase { checking, resolved, denied, deniedForever, serviceDisabled, timeout }
+
 /// 주먹지도: 네이버 지도(공식 flutter_naver_map SDK) 기반 전체화면 지도.
 /// - 지도가 화면 전체를 차지
 /// - 상단 슬림 플로팅 헤더
@@ -27,7 +35,6 @@ class JumeokMapScreen extends StatefulWidget {
 
 class _JumeokMapScreenState extends State<JumeokMapScreen> {
   static const double _nearbyRadiusKm = 3.0;
-  static const String _userLocationOverlayId = '__user_location__';
 
   // SDK init 결과를 앱 수명 동안 캐시 (화면 재방문 때 재시도 방지)
   static bool _sdkInitialized = false;
@@ -41,13 +48,17 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   List<Restaurant> _restaurants = [];
   List<Restaurant> _nearbyRestaurants = [];
   bool _loading = true;
+
+  // 실제 위치가 확인되기 전까지는 강남역 등 어떤 값도 "사용자 위치"로 사용하지 않는다.
+  // _locationPhase 가 resolved 이거나 실패 상태(_fallbackToDefault 호출됨)로
+  // 확정된 이후에만 이 값들이 화면/카메라에 사용된다.
   double _userLat = AppConfig.defaultLat;
   double _userLng = AppConfig.defaultLng;
-  bool _isDefaultLocation = true;
-  Restaurant? _selectedRestaurant;
+  bool _isDefaultLocation = false;
+  _LocationPhase _locationPhase = _LocationPhase.checking;
+  bool _locationRetrying = false;
 
-  // 카메라 초기 위치는 딱 한 번만 설정한다.
-  bool _cameraInitialized = false;
+  Restaurant? _selectedRestaurant;
 
   // 네이버 지도 SDK 초기화 상태 (정적 캐시 반영)
   bool _naverMapReady = _sdkInitialized;
@@ -58,7 +69,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensureNaverMapInit();
-      _initLocation();
+      _resolveInitialLocation();
       _loadRestaurants();
       _subscribeRealtime();
     });
@@ -67,6 +78,13 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   @override
   void dispose() {
     _realtimeChannel?.unsubscribe();
+    // 네이티브 위치/방향 추적(스트림)을 명시적으로 종료. 위젯이 이미 해제된
+    // 이후 컨트롤러 호출이 실패하더라도 dispose 흐름을 막지 않도록 방어.
+    try {
+      _mapController?.setLocationTrackingMode(NLocationTrackingMode.none);
+    } catch (_) {
+      // no-op
+    }
     super.dispose();
   }
 
@@ -156,63 +174,150 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     return rad * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
-  Future<void> _initLocation() async {
-    debugPrint('[MAP] 위치 초기화 시작');
-    try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        debugPrint('[MAP] 위치 서비스 비활성화 → 기본 위치 사용');
-        return;
-      }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        debugPrint('[MAP] 위치 권한 거부 (permission=$permission) → 기본 위치 사용');
-        return;
-      }
+  bool _isValidCoordinate(double lat, double lng) {
+    if (lat.isNaN || lng.isNaN) return false;
+    if (lat == 0 && lng == 0) return false;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+    return true;
+  }
 
-      debugPrint('[MAP] 위치 권한 OK (permission=$permission), GPS 조회 중...');
+  /// 위치 서비스/권한을 확인하고 성공 시 위치를, 실패 시 실패 사유를 반환한다.
+  /// 이미 영구 거부된 상태에서는 권한 요청 창을 다시 띄우지 않는다.
+  Future<({Position? position, _LocationPhase? failPhase})>
+      _checkAndFetchPosition() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      debugPrint('[MAP] 위치 서비스 비활성화');
+      return (position: null, failPhase: _LocationPhase.serviceDisabled);
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      debugPrint('[MAP] 위치 권한 영구 거부 상태 → 권한 요청 창을 다시 띄우지 않음');
+      return (position: null, failPhase: _LocationPhase.deniedForever);
+    }
+    if (permission == LocationPermission.denied) {
+      // 아직 최종 거부가 아닌 "미요청" 상태에서만 권한 창을 띄운다 (최초 1회 또는 사용자가
+      // 명시적으로 재시도/내 위치 버튼을 눌렀을 때만 이 메서드가 호출됨).
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return (position: null, failPhase: _LocationPhase.deniedForever);
+    }
+    if (permission == LocationPermission.denied) {
+      debugPrint('[MAP] 위치 권한 거부');
+      return (position: null, failPhase: _LocationPhase.denied);
+    }
+
+    try {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 5),
+          timeLimit: Duration(seconds: 8),
         ),
       );
-      if (!mounted) return;
-      setState(() {
-        _userLat = pos.latitude;
-        _userLng = pos.longitude;
-        _isDefaultLocation = false;
-      });
+      if (!_isValidCoordinate(pos.latitude, pos.longitude)) {
+        debugPrint('[MAP] 유효하지 않은 좌표 수신: ${pos.latitude}, ${pos.longitude}');
+        return (position: null, failPhase: _LocationPhase.timeout);
+      }
       debugPrint('[MAP] GPS 확보: lat=${pos.latitude} lng=${pos.longitude} '
-          'accuracy=${pos.accuracy}m');
-      await _moveCameraOnce(NLatLng(_userLat, _userLng), 15, 'gps_location');
-      await _updateUserLocationOverlay();
-      _recomputeNearby();
+          'accuracy=${pos.accuracy}m heading=${pos.heading}');
+      return (position: pos, failPhase: null);
     } catch (e) {
-      debugPrint('[MAP] 위치 조회 실패: $e → 기본 위치(강남역) 사용 '
-          'lat=$_userLat lng=$_userLng');
+      debugPrint('[MAP] 위치 조회 실패: $e');
+      return (position: null, failPhase: _LocationPhase.timeout);
+    }
+  }
+
+  /// 앱 진입 시 최초 1회 위치를 확인한다. 실패 시에만 "기본 지도 위치"로 대체하며,
+  /// 그 경우 UI에서 반드시 기본 위치임을 표시한다 (사용자 위치로 위장하지 않음).
+  Future<void> _resolveInitialLocation() async {
+    debugPrint('[MAP] 위치 초기화 시작');
+    if (!mounted) return;
+    setState(() => _locationPhase = _LocationPhase.checking);
+
+    final result = await _checkAndFetchPosition();
+    if (!mounted) return;
+
+    if (result.position != null) {
+      setState(() {
+        _userLat = result.position!.latitude;
+        _userLng = result.position!.longitude;
+        _isDefaultLocation = false;
+        _locationPhase = _LocationPhase.resolved;
+      });
+      _recomputeNearby();
+      return;
+    }
+
+    debugPrint('[MAP] 위치 확인 실패(${result.failPhase}) → 기본 지도 위치(강남역) 표시');
+    setState(() {
+      _userLat = AppConfig.defaultLat;
+      _userLng = AppConfig.defaultLng;
+      _isDefaultLocation = true;
+      _locationPhase = result.failPhase ?? _LocationPhase.timeout;
+    });
+    _recomputeNearby();
+  }
+
+  /// "다시 시도" 버튼: 권한이 아직 최종 거부(deniedForever)가 아니라면 다시 확인한다.
+  Future<void> _retryLocation() async {
+    if (_locationRetrying) return;
+    setState(() => _locationRetrying = true);
+    try {
+      await _resolveInitialLocation();
+      if (_locationPhase == _LocationPhase.resolved) {
+        await _ensureLocationTrackingStarted();
+        if (mounted) {
+          await _moveCameraTo(NLatLng(_userLat, _userLng), 15, 'retry_success');
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _locationRetrying = false);
+    }
+  }
+
+  /// 내 위치 버튼: 최신 위치를 다시 확인하고 현재 위치로 부드럽게 이동한다.
+  /// (최초 진입 자동 이동과는 별개로, 항상 사용자가 직접 눌렀을 때만 카메라를 이동시킨다.)
+  Future<void> _onMyLocationButtonPressed() async {
+    if (_locationPhase == _LocationPhase.deniedForever) {
+      await Geolocator.openAppSettings();
+      return;
+    }
+    if (_locationPhase == _LocationPhase.serviceDisabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+
+    setState(() => _locationRetrying = true);
+    try {
+      final result = await _checkAndFetchPosition();
+      if (!mounted) return;
+
+      if (result.position == null) {
+        setState(() {
+          _isDefaultLocation = true;
+          _locationPhase = result.failPhase ?? _LocationPhase.timeout;
+        });
+        return;
+      }
+
+      setState(() {
+        _userLat = result.position!.latitude;
+        _userLng = result.position!.longitude;
+        _isDefaultLocation = false;
+        _locationPhase = _LocationPhase.resolved;
+      });
+      await _ensureLocationTrackingStarted();
+      await _moveCameraTo(
+          NLatLng(_userLat, _userLng), 15, 'my_location_button');
+      _recomputeNearby();
+    } finally {
+      if (mounted) setState(() => _locationRetrying = false);
     }
   }
 
   // ─── 카메라 ────────────────────────────────────────────────
-
-  Future<void> _moveCameraOnce(
-      NLatLng center, double zoom, String reason) async {
-    if (_cameraInitialized) {
-      debugPrint('[MAP] 카메라 이동 스킵 (이미 설정됨, 요청=$reason)');
-      return;
-    }
-    _cameraInitialized = true;
-    debugPrint('[MAP] 카메라 이동: reason=$reason '
-        'target=${center.latitude},${center.longitude} zoom=$zoom');
-    await _mapController?.updateCamera(
-      NCameraUpdate.withParams(target: center, zoom: zoom),
-    );
-  }
 
   Future<void> _moveCameraTo(NLatLng center, double zoom, String reason) async {
     debugPrint('[MAP] 카메라 강제 이동: reason=$reason '
@@ -224,14 +329,41 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
 
   // ─── 지도 준비 ─────────────────────────────────────────────
 
+  /// 지도가 준비된 시점은 이미 _locationPhase 가 확정된 이후이므로(빌드 단계에서
+  /// _LocationPhase.checking 동안은 NaverMap 자체를 만들지 않음), 초기 카메라는
+  /// NaverMapViewOptions.initialCameraPosition 값이 그대로 사용된다.
+  /// 여기서는 위치가 성공적으로 확보된 경우에만 네이티브 위치 오버레이(방향 포함)를 켠다.
   Future<void> _onMapReady() async {
-    debugPrint('[MAP] onMapReady 호출');
-    await _updateUserLocationOverlay();
-    if (!_cameraInitialized) {
-      await _moveCameraOnce(
-          NLatLng(_userLat, _userLng), 14, 'initial_map_ready');
+    debugPrint('[MAP] onMapReady 호출 (locationPhase=$_locationPhase)');
+    if (_locationPhase == _LocationPhase.resolved) {
+      await _ensureLocationTrackingStarted();
     }
     await _addStoreMarkers(_restaurants.where(_hasCoords).toList());
+  }
+
+  /// 네이버 지도 SDK 내장 위치 오버레이를 사용해 사용자 위치(점 + 정확도 링)와
+  /// 바라보는 방향(부채꼴 오버레이)을 표시한다. NLocationTrackingMode.noFollow 는
+  /// "위치를 실시간으로 보여주되 카메라는 따라 움직이지 않는" 모드로, 지도 자동
+  /// 회전/자동 재중심 없이 오버레이만 갱신된다 (SDK 자체 문서화된 동작).
+  /// 방향(bearing)은 GPS course 또는 기기 방향 센서 중 사용 가능한 값을 SDK가
+  /// 내부적으로 선택해 제공하며, 신뢰할 수 없을 때는 SDK가 자체적으로 갱신을
+  /// 보류하므로 이 앱에서 별도로 0도를 강제하거나 보정하지 않는다.
+  Future<void> _ensureLocationTrackingStarted() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    if (controller.locationTrackingMode == NLocationTrackingMode.noFollow) {
+      return; // 이미 켜져 있으면 중복 구독하지 않음
+    }
+    final overlay = controller.getLocationOverlay();
+    // 정확도 링/점 스타일: 브랜드 오렌지 컬러 + 반투명 정확도 원, 음식점 마커와
+    // 뚜렷이 구분되도록 SDK 기본 아이콘(파란 점)은 유지하고 색상 오버레이만 커스텀.
+    overlay
+      ..setCircleColor(AppColors.orange.withValues(alpha: 0.16))
+      ..setCircleOutlineColor(AppColors.orange.withValues(alpha: 0.9))
+      ..setCircleOutlineWidth(2)
+      ..setSubIcon(NLocationOverlay.faceModeSubIcon); // 방향 표시용 부채꼴 아이콘
+    controller.setLocationTrackingMode(NLocationTrackingMode.noFollow);
+    debugPrint('[MAP] 네이티브 위치 오버레이 추적 시작 (noFollow)');
   }
 
   // ─── 가게 데이터 로드 ──────────────────────────────────────
@@ -263,21 +395,11 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       debugPrint('[MAP] 신규 가게 감지: ${r.name} → 카메라 이동');
       await _moveCameraTo(NLatLng(r.lat, r.lng), 15, 'new_restaurant_${r.id}');
     }
-
-    // 초기 로드에서 GPS 없고 카메라 미설정인 경우: 첫 가게 위치로
-    if (!isAutoRefresh && !_cameraInitialized) {
-      final first = withCoords.cast<Restaurant?>().firstWhere(
-            (_) => true,
-            orElse: () => null,
-          );
-      if (first != null) {
-        await _moveCameraOnce(
-          NLatLng(first.lat, first.lng),
-          14,
-          'first_restaurant_with_coords',
-        );
-      }
-    }
+    // 참고: 이전에는 GPS를 못 가져온 경우 카메라를 "첫 번째 가게" 위치로 자동
+    // 이동시켰으나, 이는 "최초 진입 또는 내 위치 버튼 클릭 시에만 카메라를 이동한다"
+    // 는 정책과 충돌하고 목록 순서에 따라 임의의 지역으로 튀는 문제가 있어 제거함.
+    // 위치 확보 실패 시에는 _resolveInitialLocation 이 설정한 "기본 지도 위치"
+    // (명확히 라벨링됨)를 그대로 유지한다.
   }
 
   void _recomputeNearby() {
@@ -343,21 +465,6 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       await controller.addOverlay(marker);
     }
     debugPrint('[MAP] 마커 렌더링 완료: ${stores.length}개');
-  }
-
-  Future<void> _updateUserLocationOverlay() async {
-    final controller = _mapController;
-    if (controller == null) return;
-    final circle = NCircleOverlay(
-      id: _userLocationOverlayId,
-      center: NLatLng(_userLat, _userLng),
-      radius: 30,
-      color: AppColors.orange.withValues(alpha: 0.25),
-      outlineColor: AppColors.orange,
-      outlineWidth: 3,
-    );
-    await controller.addOverlay(circle);
-    debugPrint('[MAP] 사용자 위치 오버레이 갱신: lat=$_userLat lng=$_userLng');
   }
 
   // ─── 마커 탭 ───────────────────────────────────────────────
@@ -441,7 +548,25 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                 ],
               ),
             )
+          else if (_locationPhase == _LocationPhase.checking)
+            // 위치가 확정되기 전까지는 강남역 등 어떤 좌표도 지도에 보여주지 않는다.
+            // (여기서 지도를 아예 그리지 않으므로, initialCameraPosition 에 잘못된
+            // 좌표가 잠깐이라도 노출되는 경우 자체가 발생하지 않음)
+            const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppColors.orange),
+                  SizedBox(height: 12),
+                  Text('현재 위치를 확인하고 있습니다',
+                      style: TextStyle(fontSize: 14, color: AppColors.textGray)),
+                ],
+              ),
+            )
           else
+            // 이 지점에 도달했다는 것은 _locationPhase 가 resolved 이거나(실제 GPS)
+            // 실패 상태(_fallbackToDefault 로 "기본 지도 위치"가 명확히 설정됨)라는
+            // 뜻이므로, _userLat/_userLng 는 항상 의미있는 값이다.
             NaverMap(
               options: NaverMapViewOptions(
                 initialCameraPosition: NCameraPosition(
@@ -465,6 +590,8 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
           _floatingHeader(),
           _floatingControls(),
           _bottomContent(),
+
+          if (_naverMapReady && _isDefaultLocation) _defaultLocationBanner(),
 
           if (_loading) _loadingChip(),
         ],
@@ -520,7 +647,9 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _isDefaultLocation ? '강남역' : '내 위치',
+                      _isDefaultLocation
+                          ? '기본 지도 위치'
+                          : '내 위치',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -535,12 +664,88 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: () {
-                  _cameraInitialized = false; // 수동 새로고침 시 카메라 재설정 허용
-                  _initLocation();
+                  _onMyLocationButtonPressed();
                   _loadRestaurants();
                 },
                 child: const Icon(Icons.refresh,
                     size: 20, color: AppColors.textGray),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 기본 지도 위치(강남역)를 표시 중일 때 그 사실과 사유, 대응 방법을 명확히
+  /// 안내하는 배너. 위치 권한/서비스 상태에 따라 다른 안내와 버튼을 보여준다.
+  Widget _defaultLocationBanner() {
+    final (String message, String actionLabel, VoidCallback action) =
+        switch (_locationPhase) {
+      _LocationPhase.deniedForever => (
+          '위치 권한이 거부되어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+          '위치 권한 설정 열기',
+          () => Geolocator.openAppSettings(),
+        ),
+      _LocationPhase.serviceDisabled => (
+          '기기 위치 서비스가 꺼져 있어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+          '위치 설정 열기',
+          () => Geolocator.openLocationSettings(),
+        ),
+      _LocationPhase.denied => (
+          '위치 권한이 없어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+          '다시 시도',
+          _retryLocation,
+        ),
+      _ => (
+          '현재 위치를 확인하지 못해 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+          '다시 시도',
+          _retryLocation,
+        ),
+    };
+
+    return Positioned(
+      top: 72,
+      left: 16,
+      right: 16,
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded,
+                  size: 16, color: AppColors.orange),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(message,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.darkInk)),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _locationRetrying ? null : action,
+                child: _locationRetrying
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.orange),
+                      )
+                    : Text(actionLabel,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.orange)),
               ),
             ],
           ),
@@ -564,11 +769,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
           const SizedBox(height: 8),
           _controlButton(
             Icons.my_location,
-            () => _moveCameraTo(
-              NLatLng(_userLat, _userLng),
-              15,
-              'my_location_button',
-            ),
+            _locationRetrying ? null : _onMyLocationButtonPressed,
             filled: true,
           ),
         ],
@@ -576,7 +777,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     );
   }
 
-  Widget _controlButton(IconData icon, VoidCallback onTap,
+  Widget _controlButton(IconData icon, VoidCallback? onTap,
       {bool filled = false}) {
     return Container(
       decoration: BoxDecoration(

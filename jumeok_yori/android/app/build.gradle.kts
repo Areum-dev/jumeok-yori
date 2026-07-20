@@ -38,7 +38,10 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 35
-        versionCode = 2
+        // 2026-07-17: 주먹지도 위치 기능 개선 업데이트. pubspec.yaml(1.0.0+3)의
+        // 빌드 번호와 동일하게 맞춰 Android/iOS 버전 번호를 동기화함.
+        // 이전 Google Play 업로드 versionCode(2)보다 1 증가.
+        versionCode = 3
         versionName = "1.0.0"
     }
 

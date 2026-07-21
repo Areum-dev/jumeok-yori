@@ -40,6 +40,21 @@
 	<array>
 		<string>nmap</string>
 	</array>
+	<!-- 카카오 로그인(Supabase OAuth) 복귀용 URL Scheme.
+	     Supabase Redirect URL: com.jumeokyori.app://login-callback 과 완전히 일치해야 함.
+	     (실제 iOS Bundle ID는 com.jumeok.jumeokYori 그대로 유지, 이 scheme은
+	     OAuth 리디렉션 전용으로 별도 등록하는 값이며 Bundle ID와 같을 필요 없음) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.jumeokyori.app.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.jumeokyori.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -341,13 +341,18 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     await _addStoreMarkers(_restaurants.where(_hasCoords).toList());
   }
 
-  /// 네이버 지도 SDK 내장 위치 오버레이를 사용해 사용자 위치(점 + 정확도 링)와
+  /// 네이버 지도 SDK 내장 위치 오버레이를 사용해 사용자 위치(파란 점 + 정확도 링)와
   /// 바라보는 방향(부채꼴 오버레이)을 표시한다. NLocationTrackingMode.noFollow 는
   /// "위치를 실시간으로 보여주되 카메라는 따라 움직이지 않는" 모드로, 지도 자동
   /// 회전/자동 재중심 없이 오버레이만 갱신된다 (SDK 자체 문서화된 동작).
   /// 방향(bearing)은 GPS course 또는 기기 방향 센서 중 사용 가능한 값을 SDK가
   /// 내부적으로 선택해 제공하며, 신뢰할 수 없을 때는 SDK가 자체적으로 갱신을
   /// 보류하므로 이 앱에서 별도로 0도를 강제하거나 보정하지 않는다.
+  ///
+  /// 색상: 정확도 링/점 색상을 SDK 기본값(파란색)에서 바꾸지 않는다. 예전에는
+  /// 브랜드 오렌지로 덮어써서 "파란 점 위에 주황 원"이 겹쳐 보이는 중복 표시
+  /// 문제가 있었음 — 이제 SDK 기본 파란색 하나로만 표시되도록 커스텀 색상
+  /// 지정을 제거했다 (요구사항: 파란색 표시만 유지, 주황색 완전 제거).
   Future<void> _ensureLocationTrackingStarted() async {
     final controller = _mapController;
     if (controller == null) return;
@@ -355,15 +360,9 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       return; // 이미 켜져 있으면 중복 구독하지 않음
     }
     final overlay = controller.getLocationOverlay();
-    // 정확도 링/점 스타일: 브랜드 오렌지 컬러 + 반투명 정확도 원, 음식점 마커와
-    // 뚜렷이 구분되도록 SDK 기본 아이콘(파란 점)은 유지하고 색상 오버레이만 커스텀.
-    overlay
-      ..setCircleColor(AppColors.orange.withValues(alpha: 0.16))
-      ..setCircleOutlineColor(AppColors.orange.withValues(alpha: 0.9))
-      ..setCircleOutlineWidth(2)
-      ..setSubIcon(NLocationOverlay.faceModeSubIcon); // 방향 표시용 부채꼴 아이콘
+    overlay.setSubIcon(NLocationOverlay.faceModeSubIcon); // 방향 표시용 부채꼴 아이콘
     controller.setLocationTrackingMode(NLocationTrackingMode.noFollow);
-    debugPrint('[MAP] 네이티브 위치 오버레이 추적 시작 (noFollow)');
+    debugPrint('[MAP] 네이티브 위치 오버레이 추적 시작 (noFollow, 기본 파란색 유지)');
   }
 
   // ─── 가게 데이터 로드 ──────────────────────────────────────
@@ -438,6 +437,57 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
 
   // ─── 오버레이 / 마커 ───────────────────────────────────────
 
+  // 가게 마커 아이콘은 위젯 1개를 이미지로 변환해 생성하므로(NOverlayImage.fromWidget),
+  // 매 렌더링마다 다시 만들지 않도록 Future 자체를 캐싱해 재사용한다.
+  // (일반/선택 상태 2종류만 있으면 되므로 최대 2번만 생성됨)
+  Future<NOverlayImage>? _pinIconNormal;
+  Future<NOverlayImage>? _pinIconSelected;
+
+  static const double _pinSizeNormal = 30;
+  static const double _pinSizeSelected = 40;
+
+  /// 작고 깔끔한 원형 가게 핀. 파란색 사용자 위치 오버레이와 확실히 구분되도록
+  /// 브랜드 오렌지 계열을 사용하되 채도를 과하게 올리지 않았고, 흰 테두리와
+  /// 옅은 그림자로 지도 위에서도 잘 보이게 했다. anchor 를 중앙(0.5, 0.5)으로
+  /// 지정해 원의 중심이 실제 좌표를 정확히 가리키도록 함(기본값은 하단 중앙이라
+  /// 원형 아이콘에는 맞지 않음).
+  Widget _pinIconWidget({required bool selected}) {
+    final size = selected ? _pinSizeSelected : _pinSizeNormal;
+    final iconSize = selected ? 20.0 : 15.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected ? AppColors.orange : AppColors.orange.withValues(alpha: 0.92),
+        border: Border.all(color: Colors.white, width: selected ? 3 : 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(Icons.restaurant_rounded, color: Colors.white, size: iconSize),
+    );
+  }
+
+  Future<NOverlayImage> _getPinIcon({required bool selected}) {
+    if (selected) {
+      return _pinIconSelected ??= NOverlayImage.fromWidget(
+        context: context,
+        size: const Size(_pinSizeSelected, _pinSizeSelected),
+        widget: _pinIconWidget(selected: true),
+      );
+    }
+    return _pinIconNormal ??= NOverlayImage.fromWidget(
+      context: context,
+      size: const Size(_pinSizeNormal, _pinSizeNormal),
+      widget: _pinIconWidget(selected: false),
+    );
+  }
+
   Future<void> _addStoreMarkers(List<Restaurant> stores) async {
     final controller = _mapController;
     if (controller == null) {
@@ -447,13 +497,21 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     debugPrint('[MAP] 마커 렌더링 시작: ${stores.length}개');
     await controller.clearOverlays(type: NOverlayType.marker);
 
+    final normalIcon = await _getPinIcon(selected: false);
+    final selectedIcon = await _getPinIcon(selected: true);
+    if (!mounted) return;
+
     for (final r in stores) {
       final isSelected = _selectedRestaurant?.id == r.id;
       final marker = NMarker(
         id: r.id,
         position: NLatLng(r.lat, r.lng),
-        iconTintColor:
-            isSelected ? AppColors.orange : AppColors.orange.withValues(alpha: 0.85),
+        icon: isSelected ? selectedIcon : normalIcon,
+        anchor: const NPoint(0.5, 0.5),
+        size: Size(
+          isSelected ? _pinSizeSelected : _pinSizeNormal,
+          isSelected ? _pinSizeSelected : _pinSizeNormal,
+        ),
         caption: NOverlayCaption(
           text: r.name,
           textSize: 12,

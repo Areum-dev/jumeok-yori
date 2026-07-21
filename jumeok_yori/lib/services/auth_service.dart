@@ -51,6 +51,31 @@ class AuthService {
     }
   }
 
+  /// 카카오 로그인 (Supabase OAuth 방식). Kakao Native SDK 를 직접 쓰지 않고
+  /// Supabase 가 카카오 인증 서버로 리디렉션한 뒤, 앱이 [kakaoRedirectTo] 딥링크로
+  /// 복귀하면 supabase_flutter 가 내부적으로 세션을 확립합니다.
+  ///
+  /// 이 메서드가 반환하는 bool 은 "로그인이 완료됐다"는 뜻이 아니라
+  /// "카카오 로그인 페이지를 여는 데 성공했다"는 뜻입니다(Supabase SDK 공식 동작).
+  /// 실제 로그인 성공 여부는 authStateChanges 스트림의 signedIn 이벤트로 판단해야
+  /// 합니다.
+  static const kakaoRedirectTo = 'com.jumeokyori.app://login-callback';
+
+  Future<bool> signInWithKakao() async {
+    final client = _client;
+    if (client == null) throw '서버에 연결할 수 없습니다.';
+    try {
+      return await client.auth.signInWithOAuth(
+        OAuthProvider.kakao,
+        redirectTo: kakaoRedirectTo,
+      );
+    } on AuthException catch (e) {
+      throw _koreanError(e.message);
+    } catch (_) {
+      throw '카카오 로그인 중 오류가 발생했습니다.';
+    }
+  }
+
   /// 비밀번호 재설정 메일 전송.
   Future<void> resetPassword(String email) async {
     final client = _client;

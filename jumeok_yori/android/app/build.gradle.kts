@@ -38,11 +38,11 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 35
-        // 2026-07-17: 주먹지도 위치 기능 개선 업데이트. pubspec.yaml(1.0.0+3)의
-        // 빌드 번호와 동일하게 맞춰 Android/iOS 버전 번호를 동기화함.
-        // 이전 Google Play 업로드 versionCode(2)보다 1 증가.
-        versionCode = 3
-        versionName = "1.0.0"
+        // 2026-07-20: 카카오 로그인 추가 + 지도 UI 개선 업데이트.
+        // pubspec.yaml(1.1.0+4)의 빌드 번호와 동일하게 동기화.
+        // 신규 기능 추가라 versionName 도 1.0.0 -> 1.1.0 으로 올림.
+        versionCode = 4
+        versionName = "1.1.0"
     }
 
     buildTypes {

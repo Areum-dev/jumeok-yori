@@ -19,6 +19,8 @@ class AuthRepository {
   Future<void> signIn(String email, String password) =>
       _authService.signIn(email, password);
 
+  Future<bool> signInWithKakao() => _authService.signInWithKakao();
+
   Future<void> resetPassword(String email) =>
       _authService.resetPassword(email);
 

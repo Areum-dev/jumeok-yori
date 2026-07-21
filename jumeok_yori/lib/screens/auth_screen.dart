@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/app_state.dart';
 import '../repositories/auth_repository.dart';
 import '../theme/app_theme.dart';
+import '../widgets/kakao_login_button.dart';
 import '../widgets/logo_widget.dart';
 import '../widgets/primary_button.dart';
 import 'terms_agreement_screen.dart';
@@ -25,12 +28,32 @@ class _AuthScreenState extends State<AuthScreen> {
 
   _AuthMode _mode = _AuthMode.login;
   bool _loading = false;
+  bool _kakaoLoading = false;
   bool _obscure = true;
   String? _error;
   bool _marketingAgreed = false;
 
+  // 카카오 로그인은 브라우저 복귀 후 비동기로 완료되므로, signInWithOAuth 의
+  // 반환값이 아니라 인증 상태 스트림으로 완료 여부를 감지한다. 이 화면에서만
+  // 구독하고(다른 화면에서 중복 구독하지 않음) dispose 시 반드시 해제한다.
+  StreamSubscription<AuthState>? _authStateSub;
+  // 이메일 로그인(직접 흐름)과 스트림 이벤트가 같은 로그인 건에 대해
+  // 동시에 _afterLogin 을 호출해 화면 이동이 중복 발생하지 않도록 방지.
+  bool _navigatedAfterLogin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authStateSub = _authRepo.authStateChanges.listen((state) {
+      if (state.event == AuthChangeEvent.signedIn) {
+        _afterLogin();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _authStateSub?.cancel();
     _emailCtrl.dispose();
     _pwCtrl.dispose();
     _pw2Ctrl.dispose();
@@ -69,12 +92,67 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _afterLogin() async {
+    // 이메일 로그인의 직접 호출과 authStateChanges 스트림(카카오 OAuth 완료,
+    // 그리고 이메일 로그인 시에도 동일 이벤트가 한 번 더 발생함)이 겹쳐
+    // 같은 로그인 건에 대해 두 번 실행/이동하지 않도록 가드.
+    if (_navigatedAfterLogin) return;
+    _navigatedAfterLogin = true;
     if (!mounted) return;
+
+    // 카카오 계정이 이메일 제공에 동의하지 않은 경우 user.email 이 없을 수 있다.
+    // 가짜 이메일을 만들거나 기존 계정과 임의로 연결하지 않고, 그대로 진행하되
+    // 사용자에게 한 번 안내만 한다 (Supabase의 "Allow users without an email"
+    // 설정이 켜져 있다는 전제 — 꺼져 있다면애초에 이 경로까지 오지 못하고
+    // Supabase 쪽에서 계정 생성 자체가 실패함).
+    final currentEmail = Supabase.instance.client.auth.currentUser?.email;
+    if (currentEmail == null || currentEmail.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('이메일 정보 없음'),
+          content: const Text(
+            '카카오 계정에 이메일 제공 동의가 없어 이메일 없이 로그인됐어요.\n'
+            '비밀번호 재설정 등 이메일이 필요한 기능은 사용할 수 없어요.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+    }
+
     final appState = context.read<AppState>();
     await appState.refreshProfile();
     await appState.loadSaved();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  Future<void> _signInWithKakao() async {
+    if (_kakaoLoading || _loading) return; // 중복 클릭 방지
+    setState(() {
+      _kakaoLoading = true;
+      _error = null;
+    });
+    try {
+      // signInWithOAuth 는 "카카오 로그인 페이지를 여는 데 성공했는지"만 반환한다.
+      // 실제 로그인 완료는 initState 에서 구독한 authStateChanges 스트림이
+      // signedIn 이벤트를 받으면 _afterLogin 이 알아서 호출된다.
+      final launched = await _authRepo.signInWithKakao();
+      if (!launched && mounted) {
+        setState(() => _error = '카카오 로그인 화면을 열지 못했어요. 다시 시도해 주세요.');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = _mapError(e));
+    } finally {
+      // 브라우저로 전환된 뒤에는 로딩 표시를 계속 띄워둘 필요가 없다
+      // (사용자가 로그인을 취소하고 앱으로 돌아와도 화면이 멈춰있지 않도록).
+      if (mounted) setState(() => _kakaoLoading = false);
+    }
   }
 
   Future<void> _signIn() async {
@@ -293,6 +371,26 @@ class _AuthScreenState extends State<AuthScreen> {
                     style: TextStyle(color: AppColors.textGray),
                   ),
                 ),
+              if (!isSignup) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: const [
+                    Expanded(child: Divider(color: AppColors.softGray)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('또는',
+                          style: TextStyle(
+                              color: AppColors.textGray, fontSize: 12)),
+                    ),
+                    Expanded(child: Divider(color: AppColors.softGray)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                KakaoLoginButton(
+                  isLoading: _kakaoLoading,
+                  onPressed: _signInWithKakao,
+                ),
+              ],
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: _loading ? null : _continueAsGuest,

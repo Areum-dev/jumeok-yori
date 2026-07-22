@@ -61,6 +61,13 @@ class AuthService {
   /// 합니다.
   static const kakaoRedirectTo = 'com.jumeokyori.app://login-callback';
 
+  /// 카카오 디벨로퍼스 동의항목과 정확히 일치하는 scope만 요청합니다.
+  /// account_email 은 카카오 디벨로퍼스에서 "권한 없음"으로 설정돼 있어,
+  /// 이 값을 요청(또는 Supabase 기본 scope에 맡겨 암묵적으로 요청)하면
+  /// 카카오 서버가 KOE205(동의항목에 없는 scope 요청)로 로그인을 거부합니다.
+  /// scopes 를 명시적으로 지정해 Supabase 의 기본 scope 목록을 덮어씁니다.
+  static const _kakaoScopes = 'profile_nickname profile_image';
+
   Future<bool> signInWithKakao() async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
@@ -68,6 +75,7 @@ class AuthService {
       return await client.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: kakaoRedirectTo,
+        scopes: _kakaoScopes,
       );
     } on AuthException catch (e) {
       throw _koreanError(e.message);
@@ -105,12 +113,18 @@ class AuthService {
           .eq('id', user.id)
           .maybeSingle();
       if (res == null) {
-        // 트리거 미동작 대비 fallback
+        // 트리거 미동작 대비 fallback. 카카오 계정은 email 이 없을 수 있으므로
+        // (account_email scope 미요청) 빈 문자열이 되지 않도록 처리한다.
+        // (my_page_screen 등에서 displayName.characters.first 를 쓰는데
+        // 빈 문자열이면 예외가 발생한다.)
+        final email = user.email;
         return Profile(
           id: user.id,
-          email: user.email ?? '',
-          displayName: (user.email ?? '').split('@').first,
-          role: _roleFromEmail(user.email),
+          email: email ?? '',
+          displayName: (email != null && email.contains('@'))
+              ? email.split('@').first
+              : '카카오 사용자',
+          role: _roleFromEmail(email),
           createdAt: DateTime.now(),
         );
       }

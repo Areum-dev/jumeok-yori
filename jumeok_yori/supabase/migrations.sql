@@ -113,3 +113,23 @@ CREATE POLICY "menu_images_public_read" ON storage.objects
 DROP POLICY IF EXISTS "menu_images_auth_insert" ON storage.objects;
 CREATE POLICY "menu_images_auth_insert" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'menu-images' AND auth.role() = 'authenticated');
+
+-- ============================================================
+-- 2026-07-22: 카카오 로그인 KOE205 대응 (account_email scope 제거)
+-- 카카오 회원은 이제 email 을 절대 받지 않으므로, 신규 회원 생성 시
+-- NEW.email 이 NULL 이어도 display_name 이 비어 보이지 않도록 기본값을 넣는다.
+-- (기존 회원 데이터는 건드리지 않음 - 신규 INSERT 트리거 로직만 교체)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, display_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(split_part(NEW.email, '@', 1), '카카오 사용자')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

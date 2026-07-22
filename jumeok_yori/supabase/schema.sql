@@ -141,11 +141,18 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- ============================================================
 -- Trigger: 회원가입 시 profile 자동 생성
 -- ============================================================
+-- 2026-07-22: 카카오 로그인은 account_email scope 를 요청하지 않으므로
+-- NEW.email 이 NULL 인 회원(카카오)이 정상적으로 생겨야 한다. email 이 NULL 이면
+-- split_part 결과도 NULL 이 되어 display_name 이 비어 보이므로 기본값을 넣어준다.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, display_name)
-  VALUES (NEW.id, NEW.email, split_part(NEW.email, '@', 1))
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(split_part(NEW.email, '@', 1), '카카오 사용자')
+  )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

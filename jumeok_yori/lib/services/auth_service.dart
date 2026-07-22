@@ -64,13 +64,15 @@ class AuthService {
   /// 합니다.
   static const kakaoRedirectTo = 'com.jumeokyori.app://login-callback';
 
-  /// 카카오 디벨로퍼스 동의항목과 정확히 일치하는 scope만 요청합니다.
-  /// account_email 은 카카오 디벨로퍼스에서 "권한 없음"으로 설정돼 있어,
-  /// 이 값을 요청(또는 Supabase 기본 scope에 맡겨 암묵적으로 요청)하면
-  /// 카카오 서버가 KOE205(동의항목에 없는 scope 요청)로 로그인을 거부합니다.
-  /// scopes 를 명시적으로 지정해 Supabase 의 기본 scope 목록을 덮어씁니다.
-  static const _kakaoScopes = 'profile_nickname profile_image';
-
+  /// scopes 파라미터를 넘기지 않습니다. Supabase 는 클라이언트가 보낸
+  /// scopes 를 대체(override)가 아니라 Dashboard(Authentication > Providers >
+  /// Kakao)에 저장된 scope 뒤에 그대로 이어붙입니다(append). 그래서 예전에
+  /// scopes: 'profile_nickname profile_image' 를 넘겼을 때 실제 인가 URL은
+  /// "{Dashboard 설정값} profile_nickname profile_image" 형태로 나갔고,
+  /// Dashboard 쪽에 이미 account_email 이 남아있어 KOE205 가 계속 발생했습니다.
+  /// account_email 을 실제로 제거하려면 Supabase Dashboard 의 Kakao Provider
+  /// 설정에서 scope 값을 직접 고쳐야 하며, 앱 코드에서는 scopes 를 아예
+  /// 넘기지 않는 것이 가장 안전합니다(중복 append 도 함께 방지됨).
   Future<bool> signInWithKakao() async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
@@ -78,7 +80,6 @@ class AuthService {
       return await client.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: kakaoRedirectTo,
-        scopes: _kakaoScopes,
       );
     } on AuthException catch (e) {
       throw _koreanError(e.message);

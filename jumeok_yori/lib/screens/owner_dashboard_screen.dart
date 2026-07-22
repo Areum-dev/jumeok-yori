@@ -66,8 +66,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          await Navigator.pushNamed(context, '/menu-edit',
-                              arguments: _restaurant);
+                          await Navigator.pushNamed(
+                            context,
+                            '/menu-edit',
+                            arguments: _restaurant,
+                          );
                           _load();
                         },
                         icon: const Icon(Icons.add_rounded),
@@ -75,15 +78,20 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text('등록한 메뉴',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.darkInk)),
+                    const Text(
+                      '등록한 메뉴',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkInk,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     if (_menus.isEmpty)
-                      const Text('아직 등록한 메뉴가 없습니다.',
-                          style: TextStyle(color: AppColors.textGray))
+                      const Text(
+                        '아직 등록한 메뉴가 없습니다.',
+                        style: TextStyle(color: AppColors.textGray),
+                      )
                     else
                       ..._menus.map(_menuTile),
                   ],
@@ -94,7 +102,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   }
 
   Widget _statusCard() {
-    final status = _application?.status ?? (_restaurant != null ? 'approved' : null);
+    final status =
+        _application?.status ?? (_restaurant != null ? 'approved' : null);
     String title;
     String body;
     Color color;
@@ -125,44 +134,57 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text(body,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.darkInk, height: 1.4)),
+          Text(
+            body,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.darkInk,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _restaurantCard(Restaurant r) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.softGray),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.softGray),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          r.name,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(r.name,
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text(r.address,
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textGray)),
-            if (r.category != null) ...[
-              const SizedBox(height: 4),
-              Text(r.category!,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.midGray)),
-            ],
-          ],
+        const SizedBox(height: 4),
+        Text(
+          r.address,
+          style: const TextStyle(fontSize: 13, color: AppColors.textGray),
         ),
-      );
+        if (r.category != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            r.category!,
+            style: const TextStyle(fontSize: 12, color: AppColors.midGray),
+          ),
+        ],
+      ],
+    ),
+  );
 
   Widget _menuTile(MenuItem m) {
     Color statusColor;
@@ -190,13 +212,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.name,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w700)),
+                Text(
+                  m.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(m.priceText,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textGray)),
+                Text(
+                  m.priceText,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textGray,
+                  ),
+                ),
               ],
             ),
           ),
@@ -206,11 +236,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               color: statusColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(m.approvalStatusLabel,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor)),
+            child: Text(
+              m.approvalStatusLabel,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: statusColor,
+              ),
+            ),
           ),
         ],
       ),

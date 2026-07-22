@@ -1,7 +1,7 @@
 name: jumeok_yori
 description: 주는대로 먹는 요리 - 조건만 정하면 메뉴를 골라주는 앱
 publish_to: 'none'
-version: 1.1.0+6
+version: 1.1.1+7
 
 environment:
   sdk: ^3.12.1

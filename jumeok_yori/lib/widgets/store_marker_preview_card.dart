@@ -50,8 +50,9 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
   }
 
   Future<void> _loadMenus() async {
-    final menus =
-        await _repo.getApprovedMenusByRestaurant(widget.restaurant.id);
+    final menus = await _repo.getApprovedMenusByRestaurant(
+      widget.restaurant.id,
+    );
     if (!mounted) return;
     setState(() {
       _menus = menus.take(3).toList();
@@ -115,8 +116,11 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
                       borderRadius: BorderRadius.circular(20),
                       child: const Padding(
                         padding: EdgeInsets.all(2),
-                        child:
-                            Icon(Icons.close, size: 20, color: AppColors.midGray),
+                        child: Icon(
+                          Icons.close,
+                          size: 20,
+                          color: AppColors.midGray,
+                        ),
                       ),
                     ),
                   ],
@@ -149,14 +153,14 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
   }
 
   Widget _imagePlaceholder(double size) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: AppColors.softGray,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.restaurant, color: AppColors.midGray),
-      );
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: AppColors.softGray,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: const Icon(Icons.restaurant, color: AppColors.midGray),
+  );
 
   Widget _headerInfo(Restaurant r) {
     return Column(
@@ -165,9 +169,10 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
         Text(
           r.name,
           style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-              color: AppColors.darkInk),
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+            color: AppColors.darkInk,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -183,18 +188,22 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
               child: Text(
                 r.category ?? '음식점',
                 style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.orange,
-                    fontWeight: FontWeight.w700),
+                  fontSize: 11,
+                  color: AppColors.orange,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             if (widget.distanceKm != null) ...[
               const SizedBox(width: 6),
-              Text(_formatDistance(widget.distanceKm!),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textGray,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                _formatDistance(widget.distanceKm!),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textGray,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ],
         ),
@@ -222,7 +231,9 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.orange),
+                strokeWidth: 2,
+                color: AppColors.orange,
+              ),
             ),
           ),
         ),
@@ -252,18 +263,25 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
                         : _menuPlaceholder(),
                   ),
                   const SizedBox(height: 4),
-                  Text(m.name,
-                      style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  Text(m.priceText,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.orange,
-                          fontWeight: FontWeight.w700),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    m.name,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    m.priceText,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.orange,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -274,14 +292,14 @@ class _StoreMarkerPreviewCardState extends State<StoreMarkerPreviewCard> {
   }
 
   Widget _menuPlaceholder() => Container(
-        height: 64,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.softGray,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Icon(Icons.restaurant, color: AppColors.midGray, size: 20),
-      );
+    height: 64,
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: AppColors.softGray,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: const Icon(Icons.restaurant, color: AppColors.midGray, size: 20),
+  );
 
   Widget _buttons(Restaurant r) {
     return Row(

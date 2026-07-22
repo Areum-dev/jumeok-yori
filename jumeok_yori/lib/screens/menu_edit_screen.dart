@@ -116,8 +116,9 @@ class _MenuEditScreenState extends State<MenuEditScreen> {
       restaurantId: _restaurant!.id,
       ownerId: state.currentProfile?.id,
       name: _name.text.trim(),
-      description:
-          _description.text.trim().isEmpty ? null : _description.text.trim(),
+      description: _description.text.trim().isEmpty
+          ? null
+          : _description.text.trim(),
       price: price,
       category: _category ?? '기타',
       imageUrl: _imageUrl.text.trim().isEmpty ? null : _imageUrl.text.trim(),
@@ -160,9 +161,13 @@ class _MenuEditScreenState extends State<MenuEditScreen> {
             _field(_description, '메뉴 설명', maxLines: 3),
             _field(_imageUrl, '이미지 URL (직접 입력 시)'),
             const SizedBox(height: 16),
-            const Text('카테고리',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.darkInk)),
+            const Text(
+              '카테고리',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkInk,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -176,9 +181,13 @@ class _MenuEditScreenState extends State<MenuEditScreen> {
               }).toList(),
             ),
             const SizedBox(height: 16),
-            const Text('옵션',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.darkInk)),
+            const Text(
+              '옵션',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkInk,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -207,9 +216,13 @@ class _MenuEditScreenState extends State<MenuEditScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('매운맛 단계: $_spicy',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.darkInk)),
+            Text(
+              '매운맛 단계: $_spicy',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkInk,
+              ),
+            ),
             Slider(
               value: _spicy.toDouble(),
               min: 0,
@@ -243,46 +256,47 @@ class _MenuEditScreenState extends State<MenuEditScreen> {
         child: _uploading
             ? const Center(child: CircularProgressIndicator())
             : _pickedImage != null
-                ? FutureBuilder(
-                    future: _pickedImage!.readAsBytes(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Center(
-                            child: CircularProgressIndicator());
-                      }
-                      return Image.memory(snapshot.data!, fit: BoxFit.cover);
-                    },
-                  )
-                : existingUrl.isNotEmpty
-                    ? Image.network(
-                        existingUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _imagePlaceholder(),
-                      )
-                    : _imagePlaceholder(),
+            ? FutureBuilder(
+                future: _pickedImage!.readAsBytes(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return Image.memory(snapshot.data!, fit: BoxFit.cover);
+                },
+              )
+            : existingUrl.isNotEmpty
+            ? Image.network(
+                existingUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _imagePlaceholder(),
+              )
+            : _imagePlaceholder(),
       ),
     );
   }
 
   Widget _imagePlaceholder() => const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_a_photo_outlined, size: 36, color: AppColors.midGray),
-          SizedBox(height: 8),
-          Text('메뉴 사진을 추가해 주세요',
-              style: TextStyle(color: AppColors.textGray)),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.add_a_photo_outlined, size: 36, color: AppColors.midGray),
+      SizedBox(height: 8),
+      Text('메뉴 사진을 추가해 주세요', style: TextStyle(color: AppColors.textGray)),
+    ],
+  );
 
-  Widget _field(TextEditingController c, String label,
-          {int maxLines = 1, TextInputType? keyboard}) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: TextField(
-          controller: c,
-          maxLines: maxLines,
-          keyboardType: keyboard,
-          decoration: InputDecoration(labelText: label),
-        ),
-      );
+  Widget _field(
+    TextEditingController c,
+    String label, {
+    int maxLines = 1,
+    TextInputType? keyboard,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextField(
+      controller: c,
+      maxLines: maxLines,
+      keyboardType: keyboard,
+      decoration: InputDecoration(labelText: label),
+    ),
+  );
 }

@@ -23,11 +23,13 @@ class MapRepository {
           .toList();
       // verification_status 와 0좌표 필터는 클라이언트에서 처리 (in 쿼리 이슈 회피)
       return all
-          .where((r) =>
-              (r.verificationStatus == 'approved' ||
-                  r.verificationStatus == 'owner_verified') &&
-              r.lat != 0 &&
-              r.lng != 0)
+          .where(
+            (r) =>
+                (r.verificationStatus == 'approved' ||
+                    r.verificationStatus == 'owner_verified') &&
+                r.lat != 0 &&
+                r.lng != 0,
+          )
           .toList();
     } catch (e) {
       debugPrint('지도 가게 로드 실패: $e');
@@ -85,7 +87,8 @@ class MapRepository {
   }
 
   Future<List<MenuItem>> getApprovedMenusByRestaurant(
-      String restaurantId) async {
+    String restaurantId,
+  ) async {
     try {
       final res = await _client
           .from('menu_items')
@@ -104,13 +107,15 @@ class MapRepository {
   }
 
   Future<bool> updateApplicationCoordinates(
-      String applicationId, double lat, double lng) async {
+    String applicationId,
+    double lat,
+    double lng,
+  ) async {
     try {
-      await _client.from('owner_store_applications').update({
-        'lat': lat,
-        'lng': lng,
-        'geocoding_status': 'success',
-      }).eq('id', applicationId);
+      await _client
+          .from('owner_store_applications')
+          .update({'lat': lat, 'lng': lng, 'geocoding_status': 'success'})
+          .eq('id', applicationId);
       return true;
     } catch (e) {
       debugPrint('좌표 업데이트 실패: $e');
@@ -119,15 +124,23 @@ class MapRepository {
   }
 
   Future<bool> updateRestaurantCoordinates(
-      String restaurantId, double lat, double lng) async {
-    debugPrint('[MapRepo] 좌표 저장 시작: restaurantId=$restaurantId '
-        'lat=$lat lng=$lng (WGS84 double)');
+    String restaurantId,
+    double lat,
+    double lng,
+  ) async {
+    debugPrint(
+      '[MapRepo] 좌표 저장 시작: restaurantId=$restaurantId '
+      'lat=$lat lng=$lng (WGS84 double)',
+    );
     try {
-      await _client.from('restaurants').update({
-        'lat': lat,
-        'lng': lng,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', restaurantId);
+      await _client
+          .from('restaurants')
+          .update({
+            'lat': lat,
+            'lng': lng,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', restaurantId);
       debugPrint('[MapRepo] 좌표 저장 성공: restaurantId=$restaurantId');
       return true;
     } catch (e) {

@@ -115,19 +115,36 @@ CREATE POLICY "menu_images_auth_insert" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'menu-images' AND auth.role() = 'authenticated');
 
 -- ============================================================
--- 2026-07-22: 카카오 로그인 KOE205 대응 (account_email scope 제거)
--- 카카오 회원은 이제 email 을 절대 받지 않으므로, 신규 회원 생성 시
--- NEW.email 이 NULL 이어도 display_name 이 비어 보이지 않도록 기본값을 넣는다.
--- (기존 회원 데이터는 건드리지 않음 - 신규 INSERT 트리거 로직만 교체)
+-- 2026-07-22 ~ 2026-07-23: 카카오 로그인 KOE205 대응
+-- (account_email scope 완전 제거 + 닉네임/프로필 사진 저장)
+--
+-- 카카오 회원은 이제 email 을 절대 받지 않는다. 신규 회원 생성 시
+-- 1) NEW.email 이 NULL 이어도 display_name 이 비어 보이지 않도록 기본값을 넣고
+-- 2) 카카오가 제공한 닉네임/프로필 사진(raw_user_meta_data)을 profiles 에 저장한다.
+-- ON CONFLICT (id) DO NOTHING 이므로 기존 회원 행은 절대 건드리지 않음
+-- (신규 INSERT 트리거 로직만 교체). avatar_url 컬럼이 없으면 먼저 추가한다.
 -- ============================================================
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  meta JSONB := COALESCE(NEW.raw_user_meta_data, '{}'::jsonb);
+  nickname TEXT := COALESCE(
+    NULLIF(meta->>'full_name', ''),
+    NULLIF(meta->>'name', ''),
+    NULLIF(meta->>'nickname', ''),
+    split_part(NEW.email, '@', 1)
+  );
+  avatar TEXT := COALESCE(NULLIF(meta->>'avatar_url', ''), NULLIF(meta->>'picture', ''));
 BEGIN
-  INSERT INTO public.profiles (id, email, display_name)
+  INSERT INTO public.profiles (id, email, display_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(split_part(NEW.email, '@', 1), '카카오 사용자')
+    COALESCE(nickname, '카카오 사용자'),
+    avatar
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;

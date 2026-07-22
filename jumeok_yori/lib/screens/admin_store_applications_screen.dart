@@ -57,7 +57,10 @@ class _AdminStoreApplicationsScreenState
         _lng[applicationId] = result.lng;
       });
       await _mapRepo.updateApplicationCoordinates(
-          applicationId, result.lat!, result.lng!);
+        applicationId,
+        result.lat!,
+        result.lng!,
+      );
       _snack('좌표 변환 완료: ${result.lat}, ${result.lng}');
     } else {
       _snack(result.errorMessage ?? '좌표 변환 실패');
@@ -65,10 +68,12 @@ class _AdminStoreApplicationsScreenState
   }
 
   Future<void> _editCoordinates(String applicationId) async {
-    final latCtrl =
-        TextEditingController(text: _lat[applicationId]?.toString() ?? '');
-    final lngCtrl =
-        TextEditingController(text: _lng[applicationId]?.toString() ?? '');
+    final latCtrl = TextEditingController(
+      text: _lat[applicationId]?.toString() ?? '',
+    );
+    final lngCtrl = TextEditingController(
+      text: _lng[applicationId]?.toString() ?? '',
+    );
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -78,26 +83,32 @@ class _AdminStoreApplicationsScreenState
           children: [
             TextField(
               controller: latCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true, signed: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
               decoration: const InputDecoration(labelText: '위도 (lat)'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: lngCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true, signed: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
               decoration: const InputDecoration(labelText: '경도 (lng)'),
             ),
           ],
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('저장')),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('저장'),
+          ),
         ],
       ),
     );
@@ -118,8 +129,7 @@ class _AdminStoreApplicationsScreenState
 
   Future<void> _approve(OwnerStoreApplication app) async {
     try {
-      await _repo.approveApplication(app,
-          lat: _lat[app.id], lng: _lng[app.id]);
+      await _repo.approveApplication(app, lat: _lat[app.id], lng: _lng[app.id]);
       _snack('승인되었습니다.');
       _load();
     } catch (_) {
@@ -151,10 +161,13 @@ class _AdminStoreApplicationsScreenState
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('취소')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('반려')),
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('반려'),
+          ),
         ],
       ),
     );
@@ -171,8 +184,11 @@ class _AdminStoreApplicationsScreenState
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_apps.isEmpty) {
       return const Center(
-          child: Text('대기 중인 가게 신청이 없습니다.',
-              style: TextStyle(color: AppColors.textGray)));
+        child: Text(
+          '대기 중인 가게 신청이 없습니다.',
+          style: TextStyle(color: AppColors.textGray),
+        ),
+      );
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -199,9 +215,10 @@ class _AdminStoreApplicationsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(a.storeName,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          Text(
+            a.storeName,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 4),
           _row('사업자번호', a.businessNumber),
           if (a.ownerName != null) _row('대표자', a.ownerName!),
@@ -234,31 +251,44 @@ class _AdminStoreApplicationsScreenState
   }
 
   Widget _coordinateSection(
-      OwnerStoreApplication a, double? lat, double? lng, bool busy) {
+    OwnerStoreApplication a,
+    double? lat,
+    double? lng,
+    bool busy,
+  ) {
     final hasAddress = a.address != null && a.address!.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('주먹지도 좌표',
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkInk)),
+        const Text(
+          '주먹지도 좌표',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkInk,
+          ),
+        ),
         const SizedBox(height: 6),
         if (lat != null && lng != null) ...[
-          Row(children: const [
-            Icon(Icons.check_circle, color: AppColors.success, size: 16),
-            SizedBox(width: 6),
-            Text('좌표 자동 변환 완료',
+          Row(
+            children: const [
+              Icon(Icons.check_circle, color: AppColors.success, size: 16),
+              SizedBox(width: 6),
+              Text(
+                '좌표 자동 변환 완료',
                 style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w700)),
-          ]),
+                  fontSize: 12,
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
-          Text('위도 $lat / 경도 $lng',
-              style:
-                  const TextStyle(fontSize: 12, color: AppColors.textGray)),
+          Text(
+            '위도 $lat / 경도 $lng',
+            style: const TextStyle(fontSize: 12, color: AppColors.textGray),
+          ),
         ] else
           Container(
             padding: const EdgeInsets.all(10),
@@ -266,51 +296,62 @@ class _AdminStoreApplicationsScreenState
               color: Colors.amber.shade50,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(children: const [
-              Icon(Icons.warning_amber, color: Colors.amber, size: 18),
-              SizedBox(width: 8),
-              Expanded(
-                  child: Text('좌표가 없어 지도에 표시되지 않습니다.',
-                      style: TextStyle(fontSize: 12))),
-            ]),
+            child: Row(
+              children: const [
+                Icon(Icons.warning_amber, color: Colors.amber, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '좌표가 없어 지도에 표시되지 않습니다.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
           ),
         const SizedBox(height: 8),
-        Row(children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              icon: busy
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.my_location, size: 16),
-              label: const Text('주소 좌표 변환', style: TextStyle(fontSize: 13)),
-              onPressed: (!hasAddress || busy)
-                  ? null
-                  : () => _geocodeAddress(a.address!, a.id),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-            ),
-          ),
-          if (AppConfig.allowManualLatLngEditByAdmin) ...[
-            const SizedBox(width: 8),
+        Row(
+          children: [
             Expanded(
               child: OutlinedButton.icon(
-                icon: const Icon(Icons.edit_location_alt, size: 16),
-                label: const Text('직접 입력', style: TextStyle(fontSize: 13)),
-                onPressed: () => _editCoordinates(a.id),
-                style:
-                    OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+                icon: busy
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.my_location, size: 16),
+                label: const Text('주소 좌표 변환', style: TextStyle(fontSize: 13)),
+                onPressed: (!hasAddress || busy)
+                    ? null
+                    : () => _geocodeAddress(a.address!, a.id),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
               ),
             ),
+            if (AppConfig.allowManualLatLngEditByAdmin) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.edit_location_alt, size: 16),
+                  label: const Text('직접 입력', style: TextStyle(fontSize: 13)),
+                  onPressed: () => _editCoordinates(a.id),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ]),
+        ),
       ],
     );
   }
 
   Widget _row(String label, String value) => Padding(
-        padding: const EdgeInsets.only(top: 2),
-        child: Text('$label: $value',
-            style: const TextStyle(fontSize: 13, color: AppColors.textGray)),
-      );
+    padding: const EdgeInsets.only(top: 2),
+    child: Text(
+      '$label: $value',
+      style: const TextStyle(fontSize: 13, color: AppColors.textGray),
+    ),
+  );
 }

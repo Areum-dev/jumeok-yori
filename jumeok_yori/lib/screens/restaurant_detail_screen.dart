@@ -12,8 +12,7 @@ class RestaurantDetailScreen extends StatefulWidget {
   const RestaurantDetailScreen({super.key, required this.restaurantId});
 
   @override
-  State<RestaurantDetailScreen> createState() =>
-      _RestaurantDetailScreenState();
+  State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
 }
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
@@ -54,8 +53,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: AppColors.ivory,
-        body: Center(
-            child: CircularProgressIndicator(color: AppColors.orange)),
+        body: Center(child: CircularProgressIndicator(color: AppColors.orange)),
       );
     }
     if (_restaurant == null) {
@@ -79,58 +77,74 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         children: [
           _infoCard(r),
           const SizedBox(height: 16),
-          Row(children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.directions),
-                label: const Text('길찾기'),
-                style: ElevatedButton.styleFrom(
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.directions),
+                  label: const Text('길찾기'),
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.orange,
-                    foregroundColor: Colors.white),
-                onPressed: () {
-                  AnalyticsService.log(
-                    eventType: 'direction_clicked',
-                    restaurantId: r.id,
-                    ownerId: r.ownerId,
-                  );
-                  MapLauncherService.openDirections(
-                    restaurantName: r.name,
-                    menuName: r.name,
-                    address: r.address,
-                    lat: r.lat,
-                    lng: r.lng,
-                    recommendationType: 'registered',
-                    context: context,
-                  );
-                },
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    AnalyticsService.log(
+                      eventType: 'direction_clicked',
+                      restaurantId: r.id,
+                      ownerId: r.ownerId,
+                    );
+                    MapLauncherService.openDirections(
+                      restaurantName: r.name,
+                      menuName: r.name,
+                      address: r.address,
+                      lat: r.lat,
+                      lng: r.lng,
+                      recommendationType: 'registered',
+                      context: context,
+                    );
+                  },
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 20),
-          Text('메뉴 (${_menus.length})',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+          Text(
+            '메뉴 (${_menus.length})',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 8),
           if (_menus.isEmpty)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                  color: AppColors.softGray,
-                  borderRadius: BorderRadius.circular(12)),
-              child: const Text('아직 등록된 메뉴가 없어요.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textGray)),
+                color: AppColors.softGray,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                '아직 등록된 메뉴가 없어요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textGray),
+              ),
             )
           else
             ..._menus.map(_menuCard),
           const SizedBox(height: 16),
           Center(
             child: TextButton.icon(
-              icon: const Icon(Icons.flag_outlined,
-                  size: 14, color: AppColors.textGray),
-              label: const Text('정보 오류 신고',
-                  style: TextStyle(fontSize: 12, color: AppColors.textGray)),
-              onPressed: () => ReportDialog.show(context,
-                  restaurantId: r.id, recommendationType: 'registered'),
+              icon: const Icon(
+                Icons.flag_outlined,
+                size: 14,
+                color: AppColors.textGray,
+              ),
+              label: const Text(
+                '정보 오류 신고',
+                style: TextStyle(fontSize: 12, color: AppColors.textGray),
+              ),
+              onPressed: () => ReportDialog.show(
+                context,
+                restaurantId: r.id,
+                recommendationType: 'registered',
+              ),
             ),
           ),
         ],
@@ -139,126 +153,164 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   }
 
   Widget _infoCard(Restaurant r) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
-            ]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (r.category != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                  color: AppColors.orangeLight,
-                  borderRadius: BorderRadius.circular(8)),
-              child: Text(r.category!,
-                  style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.orange,
-                      fontWeight: FontWeight.w700)),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (r.category != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.orangeLight,
+              borderRadius: BorderRadius.circular(8),
             ),
-          const SizedBox(height: 10),
-          if (r.description != null)
-            Text(r.description!,
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textGray, height: 1.5)),
-          if (r.address.isNotEmpty)
-            _infoRow(Icons.location_on_outlined, r.address),
-          if (r.phone != null) _infoRow(Icons.phone_outlined, r.phone!),
-          if (r.openingHours != null)
-            _infoRow(Icons.access_time_outlined, r.openingHours!),
-          if (r.isTakeoutAvailable || r.isDeliveryAvailable) ...[
-            const SizedBox(height: 8),
-            Row(children: [
+            child: Text(
+              r.category!,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.orange,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        const SizedBox(height: 10),
+        if (r.description != null)
+          Text(
+            r.description!,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textGray,
+              height: 1.5,
+            ),
+          ),
+        if (r.address.isNotEmpty)
+          _infoRow(Icons.location_on_outlined, r.address),
+        if (r.phone != null) _infoRow(Icons.phone_outlined, r.phone!),
+        if (r.openingHours != null)
+          _infoRow(Icons.access_time_outlined, r.openingHours!),
+        if (r.isTakeoutAvailable || r.isDeliveryAvailable) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
               if (r.isTakeoutAvailable) _chip('포장 가능'),
               if (r.isDeliveryAvailable) ...[
                 const SizedBox(width: 6),
-                _chip('배달 가능')
+                _chip('배달 가능'),
               ],
-            ]),
-          ],
-        ]),
-      );
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
 
   Widget _infoRow(IconData icon, String text) => Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Row(children: [
-          Icon(icon, size: 14, color: AppColors.textGray),
-          const SizedBox(width: 6),
-          Expanded(
-              child: Text(text,
-                  style: const TextStyle(fontSize: 13),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis)),
-        ]),
-      );
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      children: [
+        Icon(icon, size: 14, color: AppColors.textGray),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _chip(String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-            color: AppColors.softGray,
-            borderRadius: BorderRadius.circular(6)),
-        child: Text(text,
-            style:
-                const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: AppColors.softGray,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+    ),
+  );
 
   Widget _menuCard(MenuItem m) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05), blurRadius: 6)
-            ]),
-        child: Row(children: [
-          if (m.imageUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(m.imageUrl!,
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) =>
-                      _imagePlaceholder()),
-            )
-          else
-            _imagePlaceholder(),
-          const SizedBox(width: 12),
-          Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(m.name,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w800)),
-                if (m.description != null)
-                  Text(m.description!,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textGray),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Text(m.priceText,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.orange)),
-              ])),
-        ]),
-      );
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6),
+      ],
+    ),
+    child: Row(
+      children: [
+        if (m.imageUrl != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              m.imageUrl!,
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => _imagePlaceholder(),
+            ),
+          )
+        else
+          _imagePlaceholder(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                m.name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (m.description != null)
+                Text(
+                  m.description!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textGray,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              const SizedBox(height: 4),
+              Text(
+                m.priceText,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.orange,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _imagePlaceholder() => Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-            color: AppColors.softGray,
-            borderRadius: BorderRadius.circular(8)),
-        child: const Icon(Icons.restaurant, color: AppColors.midGray),
-      );
+    width: 64,
+    height: 64,
+    decoration: BoxDecoration(
+      color: AppColors.softGray,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: const Icon(Icons.restaurant, color: AppColors.midGray),
+  );
 }

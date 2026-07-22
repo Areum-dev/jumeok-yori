@@ -12,7 +12,10 @@ class FilterStorageService {
     await prefs.setString('${_prefix}category', filter.category ?? '전체');
     await prefs.setBool('${_prefix}soloFriendly', filter.soloFriendly);
     await prefs.setBool('${_prefix}takeoutAvailable', filter.takeoutAvailable);
-    await prefs.setBool('${_prefix}deliveryAvailable', filter.deliveryAvailable);
+    await prefs.setBool(
+      '${_prefix}deliveryAvailable',
+      filter.deliveryAvailable,
+    );
     await prefs.setBool('${_prefix}veganOption', filter.veganOption);
     await prefs.setBool('${_prefix}excludeRecent', filter.excludeRecent);
   }
@@ -27,7 +30,8 @@ class FilterStorageService {
         category: (cat == null || cat == '전체') ? null : cat,
         soloFriendly: prefs.getBool('${_prefix}soloFriendly') ?? false,
         takeoutAvailable: prefs.getBool('${_prefix}takeoutAvailable') ?? false,
-        deliveryAvailable: prefs.getBool('${_prefix}deliveryAvailable') ?? false,
+        deliveryAvailable:
+            prefs.getBool('${_prefix}deliveryAvailable') ?? false,
         veganOption: prefs.getBool('${_prefix}veganOption') ?? false,
         excludeRecent: prefs.getBool('${_prefix}excludeRecent') ?? true,
       );

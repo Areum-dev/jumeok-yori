@@ -76,16 +76,15 @@ class MapLauncherService {
     double? lng,
     required String recommendationType,
     BuildContext? context,
-  }) =>
-      openDirections(
-        restaurantName: restaurantName,
-        menuName: menuName,
-        address: address,
-        lat: lat,
-        lng: lng,
-        recommendationType: recommendationType,
-        context: context,
-      );
+  }) => openDirections(
+    restaurantName: restaurantName,
+    menuName: menuName,
+    address: address,
+    lat: lat,
+    lng: lng,
+    recommendationType: recommendationType,
+    context: context,
+  );
 
   static Future<_MapChoice?> _showIosMapPicker(BuildContext context) {
     return showCupertinoModalPopup<_MapChoice>(
@@ -174,10 +173,7 @@ class MapLauncherService {
     for (final url in candidates) {
       try {
         final uri = Uri.parse(url);
-        final ok = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
         if (ok) return;
       } catch (_) {
         // 다음 후보로

@@ -51,17 +51,18 @@ Widget _heroImage(String? url) {
               url,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => const Center(
-                  child: Text('🍽️', style: TextStyle(fontSize: 64))),
+                child: Text('🍽️', style: TextStyle(fontSize: 64)),
+              ),
             ),
     ),
   );
 }
 
 Widget _tags(List<String> tags) => Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: tags.map((t) => OptionChip(label: t)).toList(),
-    );
+  spacing: 8,
+  runSpacing: 8,
+  children: tags.map((t) => OptionChip(label: t)).toList(),
+);
 
 Widget _actionRow({
   required bool isSaved,
@@ -80,7 +81,9 @@ Widget _actionRow({
             child: OutlinedButton.icon(
               onPressed: onSave,
               icon: Icon(
-                isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                isSaved
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
                 color: isSaved ? AppColors.orange : AppColors.darkInk,
               ),
               label: Text(isSaved ? '저장됨' : '저장'),
@@ -117,10 +120,15 @@ Widget _actionRow({
       const SizedBox(height: 8),
       TextButton.icon(
         onPressed: onReport,
-        icon: const Icon(Icons.flag_outlined,
-            size: 16, color: AppColors.midGray),
-        label: const Text('정보 오류 신고',
-            style: TextStyle(fontSize: 13, color: AppColors.midGray)),
+        icon: const Icon(
+          Icons.flag_outlined,
+          size: 16,
+          color: AppColors.midGray,
+        ),
+        label: const Text(
+          '정보 오류 신고',
+          style: TextStyle(fontSize: 13, color: AppColors.midGray),
+        ),
       ),
     ],
   );
@@ -144,9 +152,9 @@ Future<void> _handleSave(BuildContext context, RecommendationResult r) async {
     );
     return;
   }
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(wasSaved ? '저장을 취소했어요.' : '저장됐어요!')),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(wasSaved ? '저장을 취소했어요.' : '저장됐어요!')));
 }
 
 void _handleReport(BuildContext context, RecommendationResult r) {
@@ -177,26 +185,33 @@ class _RegisteredView extends StatelessWidget {
       children: [
         _heroImage(menu.imageUrl),
         const SizedBox(height: 16),
-        const Text('오늘은 이거.',
-            style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textGray)),
+        const Text(
+          '오늘은 이거.',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textGray,
+          ),
+        ),
         const SizedBox(height: 6),
         Text(
           menu.name,
           style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.darkInk),
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: AppColors.darkInk,
+          ),
         ),
         if (r != null) ...[
           const SizedBox(height: 4),
-          Text(r.name,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textGray)),
+          Text(
+            r.name,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textGray,
+            ),
+          ),
         ],
         const SizedBox(height: 14),
         Row(
@@ -204,8 +219,11 @@ class _RegisteredView extends StatelessWidget {
             _badge(menu.priceText, AppColors.orange, AppColors.orangeLight),
             const SizedBox(width: 8),
             if (result.distanceText.isNotEmpty)
-              _badge(result.distanceText, AppColors.darkInk,
-                  AppColors.softGray),
+              _badge(
+                result.distanceText,
+                AppColors.darkInk,
+                AppColors.softGray,
+              ),
             const SizedBox(width: 8),
             _badge(menu.category, AppColors.textGray, AppColors.softGray),
           ],
@@ -216,9 +234,14 @@ class _RegisteredView extends StatelessWidget {
         ],
         if (menu.description != null) ...[
           const SizedBox(height: 16),
-          Text(menu.description!,
-              style: const TextStyle(
-                  fontSize: 14, color: AppColors.darkInk, height: 1.5)),
+          Text(
+            menu.description!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.darkInk,
+              height: 1.5,
+            ),
+          ),
         ],
         if (r != null) ...[
           const SizedBox(height: 20),
@@ -265,24 +288,31 @@ class _StarterView extends StatelessWidget {
       children: [
         _heroImage(menu.imageUrl),
         const SizedBox(height: 16),
-        const Text('오늘은',
-            style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textGray)),
+        const Text(
+          '오늘은',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textGray,
+          ),
+        ),
         const SizedBox(height: 6),
         Text(
           menu.name,
           style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.darkInk),
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: AppColors.darkInk,
+          ),
         ),
         const SizedBox(height: 14),
         Row(
           children: [
-            _badge(menu.priceRangeText, AppColors.orange,
-                AppColors.orangeLight),
+            _badge(
+              menu.priceRangeText,
+              AppColors.orange,
+              AppColors.orangeLight,
+            ),
             const SizedBox(width: 8),
             _badge(menu.category, AppColors.textGray, AppColors.softGray),
           ],
@@ -293,9 +323,14 @@ class _StarterView extends StatelessWidget {
         ],
         if (menu.description != null) ...[
           const SizedBox(height: 16),
-          Text(menu.description!,
-              style: const TextStyle(
-                  fontSize: 14, color: AppColors.darkInk, height: 1.5)),
+          Text(
+            menu.description!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.darkInk,
+              height: 1.5,
+            ),
+          ),
         ],
         const SizedBox(height: 18),
         Container(
@@ -307,8 +342,11 @@ class _StarterView extends StatelessWidget {
           ),
           child: const Row(
             children: [
-              Icon(Icons.info_outline_rounded,
-                  size: 18, color: AppColors.textGray),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: AppColors.textGray,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -342,30 +380,27 @@ class _StarterView extends StatelessWidget {
 }
 
 Widget _badge(String text, Color fg, Color bg) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-            fontSize: 13, fontWeight: FontWeight.w700, color: fg),
-      ),
-    );
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+  decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+  child: Text(
+    text,
+    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg),
+  ),
+);
 
 Widget _infoRow(IconData icon, String text) => Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: AppColors.textGray),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text,
-                style:
-                    const TextStyle(fontSize: 14, color: AppColors.darkInk)),
-          ),
-        ],
+  padding: const EdgeInsets.only(bottom: 8),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 18, color: AppColors.textGray),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 14, color: AppColors.darkInk),
+        ),
       ),
-    );
+    ],
+  ),
+);

@@ -53,8 +53,11 @@ class AnalyticsRepository {
           .eq('event_type', eventType);
       if (todayOnly) {
         final today = DateTime.now();
-        final start =
-            DateTime(today.year, today.month, today.day).toIso8601String();
+        final start = DateTime(
+          today.year,
+          today.month,
+          today.day,
+        ).toIso8601String();
         query = query.gte('created_at', start);
       }
       final res = await query;
@@ -67,11 +70,9 @@ class AnalyticsRepository {
 
   Future<int> _countMenus(String ownerId, {bool visibleOnly = false}) async {
     try {
-      var query =
-          _client!.from('menu_items').select().eq('owner_id', ownerId);
+      var query = _client!.from('menu_items').select().eq('owner_id', ownerId);
       if (visibleOnly) {
-        query =
-            query.eq('display_status', 'approved').eq('is_available', true);
+        query = query.eq('display_status', 'approved').eq('is_available', true);
       }
       final res = await query;
       return (res as List).length;
@@ -85,15 +86,22 @@ class AnalyticsRepository {
     try {
       final results = await Future.wait([
         _countEvents(
-            ownerId: ownerId,
-            eventType: 'recommendation_drawn',
-            todayOnly: true),
+          ownerId: ownerId,
+          eventType: 'recommendation_drawn',
+          todayOnly: true,
+        ),
         _countEvents(ownerId: ownerId, eventType: 'recommendation_drawn'),
         _countEvents(
-            ownerId: ownerId, eventType: 'restaurant_viewed', todayOnly: true),
+          ownerId: ownerId,
+          eventType: 'restaurant_viewed',
+          todayOnly: true,
+        ),
         _countEvents(ownerId: ownerId, eventType: 'restaurant_viewed'),
         _countEvents(
-            ownerId: ownerId, eventType: 'direction_clicked', todayOnly: true),
+          ownerId: ownerId,
+          eventType: 'direction_clicked',
+          todayOnly: true,
+        ),
         _countEvents(ownerId: ownerId, eventType: 'direction_clicked'),
         _countEvents(ownerId: ownerId, eventType: 'saved'),
         _countEvents(ownerId: ownerId, eventType: 'shared'),

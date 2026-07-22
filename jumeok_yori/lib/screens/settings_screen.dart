@@ -85,9 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _openInquiry(InquiryType type) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => InquiryScreen(initialType: type),
-      ),
+      MaterialPageRoute(builder: (_) => InquiryScreen(initialType: type)),
     );
   }
 
@@ -98,10 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.ivory,
-      appBar: AppBar(
-        backgroundColor: AppColors.ivory,
-        title: const Text('설정'),
-      ),
+      appBar: AppBar(backgroundColor: AppColors.ivory, title: const Text('설정')),
       body: ListView(
         children: [
           // 약관/정책 섹션
@@ -119,8 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsTile(
             icon: Icons.location_on_outlined,
             title: '위치정보 이용약관',
-            onTap: () =>
-                _openDoc('위치정보 이용약관', 'lib/legal/location-policy.md'),
+            onTap: () => _openDoc('위치정보 이용약관', 'lib/legal/location-policy.md'),
           ),
           _SettingsTile(
             icon: Icons.code_outlined,
@@ -152,8 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       value: _marketingAgreed,
                       onChanged: _toggleMarketing,
                       activeThumbColor: AppColors.orange,
-                      activeTrackColor:
-                          AppColors.orange.withValues(alpha: 0.4),
+                      activeTrackColor: AppColors.orange.withValues(alpha: 0.4),
                     ),
             ),
             _SettingsTile(
@@ -210,10 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: '앱 버전',
             trailing: Text(
               _appVersion,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textGray,
-              ),
+              style: const TextStyle(fontSize: 14, color: AppColors.textGray),
             ),
           ),
 
@@ -267,15 +257,15 @@ class _SettingsTile extends StatelessWidget {
       leading: Icon(icon, color: AppColors.textGray, size: 22),
       title: Text(
         title,
-        style: TextStyle(
-          fontSize: 15,
-          color: titleColor ?? AppColors.darkInk,
-        ),
+        style: TextStyle(fontSize: 15, color: titleColor ?? AppColors.darkInk),
       ),
-      trailing: trailing ??
+      trailing:
+          trailing ??
           (onTap != null
-              ? const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.midGray)
+              ? const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.midGray,
+                )
               : null),
       onTap: onTap,
     );

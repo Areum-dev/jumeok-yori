@@ -64,19 +64,25 @@ class SupabaseMenuRepository implements MenuRepository {
 
   @override
   Future<void> approveMenu(String menuId) async {
-    await _client.from('menu_items').update({
-      'approval_status': 'approved',
-      'display_status': 'approved',
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', menuId);
+    await _client
+        .from('menu_items')
+        .update({
+          'approval_status': 'approved',
+          'display_status': 'approved',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', menuId);
   }
 
   @override
   Future<void> rejectMenu(String menuId, String note) async {
-    await _client.from('menu_items').update({
-      'approval_status': 'rejected',
-      'display_status': 'hidden',
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', menuId);
+    await _client
+        .from('menu_items')
+        .update({
+          'approval_status': 'rejected',
+          'display_status': 'hidden',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', menuId);
   }
 }

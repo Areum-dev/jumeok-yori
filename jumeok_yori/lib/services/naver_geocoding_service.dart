@@ -40,10 +40,15 @@ class NaverGeocodingService {
         'https://maps.apigw.ntruss.com/map-geocode/v2/geocode?query=$encoded',
       );
 
-      final response = await http.get(url, headers: {
-        'X-NCP-APIGW-API-KEY-ID': Env.naverMapClientId,
-        'X-NCP-APIGW-API-KEY': Env.naverMapClientSecret,
-      }).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'X-NCP-APIGW-API-KEY-ID': Env.naverMapClientId,
+              'X-NCP-APIGW-API-KEY': Env.naverMapClientSecret,
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -67,8 +72,10 @@ class NaverGeocodingService {
           );
         }
 
-        debugPrint('[Geocoding] Naver 성공: address="$address" '
-            '→ lat=$lat lng=$lng roadAddress=${first['roadAddress']}');
+        debugPrint(
+          '[Geocoding] Naver 성공: address="$address" '
+          '→ lat=$lat lng=$lng roadAddress=${first['roadAddress']}',
+        );
         return GeocodingResult(
           success: true,
           lat: lat,

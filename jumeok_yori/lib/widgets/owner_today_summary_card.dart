@@ -35,7 +35,7 @@ class OwnerTodaySummaryCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.orange.withValues(alpha: 0.12),
-            AppColors.orange.withValues(alpha: 0.04)
+            AppColors.orange.withValues(alpha: 0.04),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -51,10 +51,11 @@ class OwnerTodaySummaryCard extends StatelessWidget {
             child: Text(
               message,
               style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkInk),
+                fontSize: 13,
+                height: 1.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.darkInk,
+              ),
             ),
           ),
         ],

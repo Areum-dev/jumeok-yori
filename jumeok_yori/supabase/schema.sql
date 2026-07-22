@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
   display_name TEXT,
+  avatar_url TEXT,
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','owner','admin')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -144,14 +145,27 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- 2026-07-22: 카카오 로그인은 account_email scope 를 요청하지 않으므로
 -- NEW.email 이 NULL 인 회원(카카오)이 정상적으로 생겨야 한다. email 이 NULL 이면
 -- split_part 결과도 NULL 이 되어 display_name 이 비어 보이므로 기본값을 넣어준다.
+-- 2026-07-23: 카카오 등 OAuth 프로바이더가 제공한 닉네임/프로필 사진을
+-- raw_user_meta_data 에서 읽어 신규 가입 시 함께 저장한다. 이미 존재하는
+-- 회원(ON CONFLICT DO NOTHING)에는 절대 영향 없음 - 신규 INSERT 전용.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  meta JSONB := COALESCE(NEW.raw_user_meta_data, '{}'::jsonb);
+  nickname TEXT := COALESCE(
+    NULLIF(meta->>'full_name', ''),
+    NULLIF(meta->>'name', ''),
+    NULLIF(meta->>'nickname', ''),
+    split_part(NEW.email, '@', 1)
+  );
+  avatar TEXT := COALESCE(NULLIF(meta->>'avatar_url', ''), NULLIF(meta->>'picture', ''));
 BEGIN
-  INSERT INTO public.profiles (id, email, display_name)
+  INSERT INTO public.profiles (id, email, display_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(split_part(NEW.email, '@', 1), '카카오 사용자')
+    COALESCE(nickname, '카카오 사용자'),
+    avatar
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;

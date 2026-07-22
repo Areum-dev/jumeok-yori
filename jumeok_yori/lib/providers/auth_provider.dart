@@ -18,8 +18,11 @@ class AuthProvider extends ChangeNotifier {
     return _run(() => _repo.signIn(email, password));
   }
 
-  Future<bool> signUp(String email, String password,
-      {String? displayName}) async {
+  Future<bool> signUp(
+    String email,
+    String password, {
+    String? displayName,
+  }) async {
     return _run(() => _repo.signUp(email, password, displayName: displayName));
   }
 

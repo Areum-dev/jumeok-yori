@@ -64,16 +64,29 @@ class MyPageScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: AppColors.orange,
-                child: Text(
-                  profile?.displayName?.characters.first ?? '게',
-                  style: const TextStyle(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 20),
-                ),
+              Builder(
+                builder: (context) {
+                  final avatarUrl = profile?.avatarUrl;
+                  final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+                  return CircleAvatar(
+                    radius: 26,
+                    backgroundColor: AppColors.orange,
+                    backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                    // 프로필 사진 로드 실패해도(만료/거절 등) 앱 기본 아바타로
+                    // 자연스럽게 대체되도록 에러를 조용히 무시한다.
+                    onBackgroundImageError: hasAvatar ? (_, _) {} : null,
+                    child: hasAvatar
+                        ? null
+                        : Text(
+                            profile?.displayName?.characters.first ?? '게',
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                            ),
+                          ),
+                  );
+                },
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -85,10 +98,13 @@ class MyPageScreen extends StatelessWidget {
                         Text(
                           profile?.displayName ?? '게스트',
                           style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w800),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        if (state.isSupabaseMode) _badge('LIVE', AppColors.success),
+                        if (state.isSupabaseMode)
+                          _badge('LIVE', AppColors.success),
                         if (state.isAdmin) ...[
                           const SizedBox(width: 4),
                           _badge('관리자', AppColors.orange),
@@ -101,7 +117,9 @@ class MyPageScreen extends StatelessWidget {
                     Text(
                       profile?.email ?? '로그인하지 않음',
                       style: const TextStyle(
-                          fontSize: 13, color: AppColors.textGray),
+                        fontSize: 13,
+                        color: AppColors.textGray,
+                      ),
                     ),
                   ],
                 ),
@@ -110,42 +128,70 @@ class MyPageScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (state.isOwner)
-            _linkTile(context, Icons.dashboard_outlined, '사장님 대시보드',
-                '/owner-dashboard'),
+            _linkTile(
+              context,
+              Icons.dashboard_outlined,
+              '사장님 대시보드',
+              '/owner-dashboard',
+            ),
           if (state.isAdmin)
-            _linkTile(context, Icons.admin_panel_settings_outlined,
-                '관리자 페이지', '/admin'),
-          _linkTile(context, Icons.storefront_outlined, '내 가게 등록하기',
-              '/owner-apply'),
+            _linkTile(
+              context,
+              Icons.admin_panel_settings_outlined,
+              '관리자 페이지',
+              '/admin',
+            ),
+          _linkTile(
+            context,
+            Icons.storefront_outlined,
+            '내 가게 등록하기',
+            '/owner-apply',
+          ),
           const Divider(color: AppColors.softGray, height: 16),
           _linkTile(context, Icons.settings_outlined, '설정', '/settings'),
           if (state.isLoggedIn) ...[
-            _linkTile(context, Icons.person_outline_rounded, '개인정보 조회/수정',
-                '/settings'),
+            _linkTile(
+              context,
+              Icons.person_outline_rounded,
+              '개인정보 조회/수정',
+              '/settings',
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.location_on_outlined,
-                  color: AppColors.textGray),
-              title: const Text('위치 권한 설정',
-                  style: TextStyle(fontSize: 14)),
-              trailing: const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.midGray),
+              leading: const Icon(
+                Icons.location_on_outlined,
+                color: AppColors.textGray,
+              ),
+              title: const Text('위치 권한 설정', style: TextStyle(fontSize: 14)),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.midGray,
+              ),
               onTap: () async {
                 await Geolocator.openAppSettings();
               },
             ),
-            _linkTile(context, Icons.notifications_outlined, '마케팅 수신 변경',
-                '/settings'),
+            _linkTile(
+              context,
+              Icons.notifications_outlined,
+              '마케팅 수신 변경',
+              '/settings',
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.person_off_outlined,
-                  color: AppColors.error),
-              title: const Text('회원탈퇴',
-                  style: TextStyle(fontSize: 14, color: AppColors.error)),
-              trailing: const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.midGray),
-              onTap: () =>
-                  Navigator.pushNamed(context, '/account-deletion'),
+              leading: const Icon(
+                Icons.person_off_outlined,
+                color: AppColors.error,
+              ),
+              title: const Text(
+                '회원탈퇴',
+                style: TextStyle(fontSize: 14, color: AppColors.error),
+              ),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.midGray,
+              ),
+              onTap: () => Navigator.pushNamed(context, '/account-deletion'),
             ),
           ],
           const SizedBox(height: 8),
@@ -157,7 +203,10 @@ class MyPageScreen extends StatelessWidget {
                   await context.read<AppState>().signOut();
                   if (context.mounted) {
                     Navigator.pushNamedAndRemoveUntil(
-                        context, '/auth', (_) => false);
+                      context,
+                      '/auth',
+                      (_) => false,
+                    );
                   }
                 } else {
                   Navigator.pushNamed(context, '/auth');
@@ -172,26 +221,29 @@ class MyPageScreen extends StatelessWidget {
   }
 
   Widget _linkTile(
-          BuildContext context, IconData icon, String label, String route) =>
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: AppColors.textGray),
-        title: Text(label, style: const TextStyle(fontSize: 14)),
-        trailing:
-            const Icon(Icons.chevron_right_rounded, color: AppColors.midGray),
-        onTap: () => Navigator.pushNamed(context, route),
-      );
+    BuildContext context,
+    IconData icon,
+    String label,
+    String route,
+  ) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(icon, color: AppColors.textGray),
+    title: Text(label, style: const TextStyle(fontSize: 14)),
+    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.midGray),
+    onTap: () => Navigator.pushNamed(context, route),
+  );
 
   Widget _badge(String text, Color color) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w800, color: color)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
+    ),
+  );
 
   Widget _list(BuildContext context, List items, String emptyMsg) {
     if (items.isEmpty) {

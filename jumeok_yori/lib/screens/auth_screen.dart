@@ -44,11 +44,24 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    _authStateSub = _authRepo.authStateChanges.listen((state) {
-      if (state.event == AuthChangeEvent.signedIn) {
-        _afterLogin();
-      }
-    });
+    _authStateSub = _authRepo.authStateChanges.listen(
+      (state) {
+        if (state.event == AuthChangeEvent.signedIn) {
+          _afterLogin();
+        }
+      },
+      // 카카오 로그인 후 앱으로 복귀하는 딥링크 처리 중 세션 교환이 실패하면
+      // (예: redirect 오류, 네트워크 오류) supabase_flutter 가 이 스트림에
+      // 에러를 흘려보낸다. 핸들러가 없으면 처리되지 않은 비동기 예외가 되므로
+      // 반드시 잡아서 내부 오류 내용은 로그로만 남기고 사용자에게는
+      // 안전한 한국어 메시지만 보여준다.
+      onError: (Object error, StackTrace stackTrace) {
+        debugPrint('[AUTH] 로그인 세션 처리 중 오류: $error');
+        if (mounted) {
+          setState(() => _error = '로그인 처리 중 오류가 발생했어요. 다시 시도해 주세요.');
+        }
+      },
+    );
   }
 
   @override
@@ -230,9 +243,9 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await _authRepo.resetPassword(email);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('비밀번호 재설정 메일을 보냈어요.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('비밀번호 재설정 메일을 보냈어요.')));
     } catch (e) {
       setState(() => _error = _mapError(e));
     } finally {
@@ -288,9 +301,7 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(
-                child: LogoWidget(size: 72, showText: true),
-              ),
+              const Center(child: LogoWidget(size: 72, showText: true)),
               const SizedBox(height: 8),
               const Text(
                 '고민 끝. 오늘은 이거.',
@@ -324,9 +335,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   labelText: '비밀번호',
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscure
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
@@ -378,9 +391,13 @@ class _AuthScreenState extends State<AuthScreen> {
                     Expanded(child: Divider(color: AppColors.softGray)),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('또는',
-                          style: TextStyle(
-                              color: AppColors.textGray, fontSize: 12)),
+                      child: Text(
+                        '또는',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                     Expanded(child: Divider(color: AppColors.softGray)),
                   ],
@@ -404,41 +421,45 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _emailSentScreen() => Scaffold(
-        backgroundColor: AppColors.ivory,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('✉️', style: TextStyle(fontSize: 60)),
-                const SizedBox(height: 24),
-                const Text('인증 메일을 보냈어요.',
-                    style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 12),
-                Text(
-                  '${_emailCtrl.text}\n메일함에서 인증을 완료한 뒤\n로그인해 주세요.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 15, color: AppColors.textGray, height: 1.6),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => setState(() {
-                      _mode = _AuthMode.login;
-                      _error = null;
-                      _pwCtrl.clear();
-                      _pw2Ctrl.clear();
-                    }),
-                    child: const Text('로그인 화면으로'),
-                  ),
-                ),
-              ],
+    backgroundColor: AppColors.ivory,
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('✉️', style: TextStyle(fontSize: 60)),
+            const SizedBox(height: 24),
+            const Text(
+              '인증 메일을 보냈어요.',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              '${_emailCtrl.text}\n메일함에서 인증을 완료한 뒤\n로그인해 주세요.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.textGray,
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => setState(() {
+                  _mode = _AuthMode.login;
+                  _error = null;
+                  _pwCtrl.clear();
+                  _pw2Ctrl.clear();
+                }),
+                child: const Text('로그인 화면으로'),
+              ),
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }

@@ -63,12 +63,14 @@ class _ReportDialogState extends State<ReportDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: _reasons
-              .map((r) => RadioListTile<String>(
-                    value: r,
-                    title: Text(r, style: const TextStyle(fontSize: 14)),
-                    activeColor: AppColors.orange,
-                    contentPadding: EdgeInsets.zero,
-                  ))
+              .map(
+                (r) => RadioListTile<String>(
+                  value: r,
+                  title: Text(r, style: const TextStyle(fontSize: 14)),
+                  activeColor: AppColors.orange,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              )
               .toList(),
         ),
       ),
@@ -83,7 +85,8 @@ class _ReportDialogState extends State<ReportDialog> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2))
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('신고하기', style: TextStyle(color: AppColors.orange)),
         ),
       ],
@@ -103,9 +106,9 @@ class _ReportDialogState extends State<ReportDialog> {
     );
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('신고가 접수됐어요. 검토 후 처리할게요.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('신고가 접수됐어요. 검토 후 처리할게요.')));
     }
   }
 }

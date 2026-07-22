@@ -48,9 +48,9 @@ class _InquiryScreenState extends State<InquiryScreen> {
 
   Future<void> _submit() async {
     if (!_canSubmit) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목과 내용(10자 이상)을 입력해 주세요.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('제목과 내용(10자 이상)을 입력해 주세요.')));
       return;
     }
 
@@ -169,8 +169,9 @@ class _InquiryScreenState extends State<InquiryScreen> {
                 child: ElevatedButton(
                   onPressed: (_loading || !_canSubmit) ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _canSubmit ? AppColors.orange : AppColors.softGray,
+                    backgroundColor: _canSubmit
+                        ? AppColors.orange
+                        : AppColors.softGray,
                     foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -188,7 +189,9 @@ class _InquiryScreenState extends State<InquiryScreen> {
                       : const Text(
                           '문의 접수하기',
                           style: TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w700),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                 ),
               ),
@@ -209,13 +212,11 @@ class _InquiryScreenState extends State<InquiryScreen> {
           onTap: () => setState(() => _selectedType = type),
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: selected ? AppColors.orange : AppColors.white,
               border: Border.all(
-                color:
-                    selected ? AppColors.orange : AppColors.softGray,
+                color: selected ? AppColors.orange : AppColors.softGray,
                 width: 1.5,
               ),
               borderRadius: BorderRadius.circular(20),

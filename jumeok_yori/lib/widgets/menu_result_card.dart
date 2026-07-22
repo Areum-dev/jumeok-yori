@@ -89,8 +89,7 @@ class MenuResultCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   const Text(
                     '·',
-                    style:
-                        TextStyle(color: AppColors.midGray, fontSize: 14),
+                    style: TextStyle(color: AppColors.midGray, fontSize: 14),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -120,34 +119,34 @@ class MenuResultCard extends StatelessWidget {
   }
 
   Widget _badge(String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: AppColors.orangeLight,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.orange,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: AppColors.orangeLight,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.orange,
+      ),
+    ),
+  );
 
   Widget _conditionTag(String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.softGray,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.textGray,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: AppColors.softGray,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 11,
+        color: AppColors.textGray,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }

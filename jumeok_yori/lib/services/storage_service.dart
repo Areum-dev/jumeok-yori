@@ -18,7 +18,9 @@ class StorageService {
       final ext = file.name.contains('.') ? file.name.split('.').last : 'jpg';
       final fileName = '$path.$ext';
 
-      await _client.storage.from(bucket).uploadBinary(
+      await _client.storage
+          .from(bucket)
+          .uploadBinary(
             fileName,
             bytes,
             fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),

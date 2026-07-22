@@ -21,7 +21,14 @@ import 'restaurant_detail_screen.dart';
 /// denied / deniedForever / serviceDisabled / timeout: 실패 사유별 상태.
 /// 이 4가지 실패 상태에서만 AppConfig.defaultLat/defaultLng ("기본 지도 위치")를
 /// 사용하며, 이때는 반드시 화면에 기본 위치임을 명확히 표시한다.
-enum _LocationPhase { checking, resolved, denied, deniedForever, serviceDisabled, timeout }
+enum _LocationPhase {
+  checking,
+  resolved,
+  denied,
+  deniedForever,
+  serviceDisabled,
+  timeout,
+}
 
 /// 주먹지도: 네이버 지도(공식 flutter_naver_map SDK) 기반 전체화면 지도.
 /// - 지도가 화면 전체를 차지
@@ -93,7 +100,12 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   Future<void> _ensureNaverMapInit() async {
     if (kIsWeb) return; // 웹 미지원
     if (_sdkInitialized) {
-      if (mounted) setState(() { _naverMapReady = true; _naverMapError = null; });
+      if (mounted) {
+        setState(() {
+          _naverMapReady = true;
+          _naverMapError = null;
+        });
+      }
       return;
     }
     debugPrint('[MAP] SDK init start — clientId="${Env.naverMapClientId}"');
@@ -123,7 +135,12 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       _sdkInitialized = true;
       _sdkInitError = null;
       debugPrint('[MAP] SDK init OK');
-      if (mounted) setState(() { _naverMapReady = true; _naverMapError = null; });
+      if (mounted) {
+        setState(() {
+          _naverMapReady = true;
+          _naverMapError = null;
+        });
+      }
     } catch (e, st) {
       _sdkInitError = e.toString();
       debugPrint('[MAP] SDK init FAILED: $e\n$st');
@@ -167,7 +184,8 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     const rad = 6371.0;
     final dLat = (lat2 - lat1) * math.pi / 180;
     final dLng = (lng2 - lng1) * math.pi / 180;
-    final a = math.pow(math.sin(dLat / 2), 2) +
+    final a =
+        math.pow(math.sin(dLat / 2), 2) +
         math.cos(lat1 * math.pi / 180) *
             math.cos(lat2 * math.pi / 180) *
             math.pow(math.sin(dLng / 2), 2);
@@ -184,7 +202,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   /// 위치 서비스/권한을 확인하고 성공 시 위치를, 실패 시 실패 사유를 반환한다.
   /// 이미 영구 거부된 상태에서는 권한 요청 창을 다시 띄우지 않는다.
   Future<({Position? position, _LocationPhase? failPhase})>
-      _checkAndFetchPosition() async {
+  _checkAndFetchPosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       debugPrint('[MAP] 위치 서비스 비활성화');
@@ -220,8 +238,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
         debugPrint('[MAP] 유효하지 않은 좌표 수신: ${pos.latitude}, ${pos.longitude}');
         return (position: null, failPhase: _LocationPhase.timeout);
       }
-      debugPrint('[MAP] GPS 확보: lat=${pos.latitude} lng=${pos.longitude} '
-          'accuracy=${pos.accuracy}m heading=${pos.heading}');
+      debugPrint(
+        '[MAP] GPS 확보: lat=${pos.latitude} lng=${pos.longitude} '
+        'accuracy=${pos.accuracy}m heading=${pos.heading}',
+      );
       return (position: pos, failPhase: null);
     } catch (e) {
       debugPrint('[MAP] 위치 조회 실패: $e');
@@ -310,7 +330,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       });
       await _ensureLocationTrackingStarted();
       await _moveCameraTo(
-          NLatLng(_userLat, _userLng), 15, 'my_location_button');
+        NLatLng(_userLat, _userLng),
+        15,
+        'my_location_button',
+      );
       _recomputeNearby();
     } finally {
       if (mounted) setState(() => _locationRetrying = false);
@@ -320,8 +343,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   // ─── 카메라 ────────────────────────────────────────────────
 
   Future<void> _moveCameraTo(NLatLng center, double zoom, String reason) async {
-    debugPrint('[MAP] 카메라 강제 이동: reason=$reason '
-        'target=${center.latitude},${center.longitude} zoom=$zoom');
+    debugPrint(
+      '[MAP] 카메라 강제 이동: reason=$reason '
+      'target=${center.latitude},${center.longitude} zoom=$zoom',
+    );
     await _mapController?.updateCamera(
       NCameraUpdate.withParams(target: center, zoom: zoom),
     );
@@ -387,8 +412,9 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     await _addStoreMarkers(withCoords);
 
     // 새로 추가된 가게가 있으면 카메라를 첫 번째 신규 마커로 이동
-    final newRestaurants =
-        list.where((r) => !prevIds.contains(r.id) && _hasCoords(r)).toList();
+    final newRestaurants = list
+        .where((r) => !prevIds.contains(r.id) && _hasCoords(r))
+        .toList();
     if (isAutoRefresh && newRestaurants.isNotEmpty) {
       final r = newRestaurants.first;
       debugPrint('[MAP] 신규 가게 감지: ${r.name} → 카메라 이동');
@@ -402,10 +428,11 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   }
 
   void _recomputeNearby() {
-    final nearby = _restaurants
-        .where((r) => _hasCoords(r) && _distanceKm(r) < _nearbyRadiusKm)
-        .toList()
-      ..sort((a, b) => _distanceKm(a).compareTo(_distanceKm(b)));
+    final nearby =
+        _restaurants
+            .where((r) => _hasCoords(r) && _distanceKm(r) < _nearbyRadiusKm)
+            .toList()
+          ..sort((a, b) => _distanceKm(a).compareTo(_distanceKm(b)));
     if (mounted) setState(() => _nearbyRestaurants = nearby);
   }
 
@@ -416,22 +443,30 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
 
     debugPrint('=== 주먹지도 디버그 ===');
     debugPrint('[MAP] currentUser: ${user?.email} (${user?.id})');
-    debugPrint('[MAP] userLocation: lat=$_userLat lng=$_userLng '
-        'isDefault=$_isDefaultLocation');
+    debugPrint(
+      '[MAP] userLocation: lat=$_userLat lng=$_userLng '
+      'isDefault=$_isDefaultLocation',
+    );
     debugPrint('[MAP] approvedRestaurants total=${_restaurants.length}');
     for (final r in _restaurants) {
       final d = _distanceKm(r);
-      debugPrint('[MAP] restaurant "${r.name}" | '
-          'db_lat=${r.lat} db_lng=${r.lng} | '
-          'display=${r.displayStatus} verification=${r.verificationStatus} | '
-          'hasCoords=${_hasCoords(r)} | dist=${d.toStringAsFixed(2)}km');
+      debugPrint(
+        '[MAP] restaurant "${r.name}" | '
+        'db_lat=${r.lat} db_lng=${r.lng} | '
+        'display=${r.displayStatus} verification=${r.verificationStatus} | '
+        'hasCoords=${_hasCoords(r)} | dist=${d.toStringAsFixed(2)}km',
+      );
     }
     debugPrint('[MAP] markerCount=${storesWithCoords.length}');
     for (final r in storesWithCoords) {
-      debugPrint('[MAP] MARKER "${r.name}" | '
-          'markerLat=${r.lat} markerLng=${r.lng}');
+      debugPrint(
+        '[MAP] MARKER "${r.name}" | '
+        'markerLat=${r.lat} markerLng=${r.lng}',
+      );
     }
-    debugPrint('[MAP] nearby(<${_nearbyRadiusKm}km)=${_nearbyRestaurants.length}');
+    debugPrint(
+      '[MAP] nearby(<${_nearbyRadiusKm}km)=${_nearbyRestaurants.length}',
+    );
     debugPrint('=== 주먹지도 디버그 끝 ===');
   }
 
@@ -459,7 +494,9 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected ? AppColors.orange : AppColors.orange.withValues(alpha: 0.92),
+        color: selected
+            ? AppColors.orange
+            : AppColors.orange.withValues(alpha: 0.92),
         border: Border.all(color: Colors.white, width: selected ? 3 : 2),
         boxShadow: [
           BoxShadow(
@@ -469,7 +506,11 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
           ),
         ],
       ),
-      child: Icon(Icons.restaurant_rounded, color: Colors.white, size: iconSize),
+      child: Icon(
+        Icons.restaurant_rounded,
+        color: Colors.white,
+        size: iconSize,
+      ),
     );
   }
 
@@ -553,9 +594,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   }
 
   Future<void> _zoomBy(double delta) async {
-    await _mapController?.updateCamera(
-      NCameraUpdate.withParams(zoomBy: delta),
-    );
+    await _mapController?.updateCamera(NCameraUpdate.withParams(zoomBy: delta));
   }
 
   // ─── Build ─────────────────────────────────────────────────
@@ -573,11 +612,20 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.map_outlined, size: 48, color: AppColors.orange),
+                    const Icon(
+                      Icons.map_outlined,
+                      size: 48,
+                      color: AppColors.orange,
+                    ),
                     const SizedBox(height: 12),
-                    Text('지도 초기화 실패\n$_naverMapError',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13, color: AppColors.darkInk)),
+                    Text(
+                      '지도 초기화 실패\n$_naverMapError',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.darkInk,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _ensureNaverMapInit,
@@ -593,15 +641,23 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (kIsWeb) ...[
-                    const Icon(Icons.smartphone, size: 48, color: AppColors.orange),
+                    const Icon(
+                      Icons.smartphone,
+                      size: 48,
+                      color: AppColors.orange,
+                    ),
                     const SizedBox(height: 12),
-                    const Text('주먹지도는 모바일 앱에서 이용 가능합니다',
-                        style: TextStyle(fontSize: 15, color: AppColors.darkInk)),
+                    const Text(
+                      '주먹지도는 모바일 앱에서 이용 가능합니다',
+                      style: TextStyle(fontSize: 15, color: AppColors.darkInk),
+                    ),
                   ] else ...[
                     const CircularProgressIndicator(color: AppColors.orange),
                     const SizedBox(height: 12),
-                    const Text('지도 초기화 중...',
-                        style: TextStyle(fontSize: 14, color: AppColors.textGray)),
+                    const Text(
+                      '지도 초기화 중...',
+                      style: TextStyle(fontSize: 14, color: AppColors.textGray),
+                    ),
                   ],
                 ],
               ),
@@ -616,8 +672,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                 children: [
                   CircularProgressIndicator(color: AppColors.orange),
                   SizedBox(height: 12),
-                  Text('현재 위치를 확인하고 있습니다',
-                      style: TextStyle(fontSize: 14, color: AppColors.textGray)),
+                  Text(
+                    '현재 위치를 확인하고 있습니다',
+                    style: TextStyle(fontSize: 14, color: AppColors.textGray),
+                  ),
                 ],
               ),
             )
@@ -670,21 +728,26 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12), blurRadius: 10),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 10,
+              ),
             ],
           ),
           child: Row(
             children: [
               const Flexible(
-                child: Text('주먹지도 · 내 주변 등록 가게',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-                    overflow: TextOverflow.ellipsis),
+                child: Text(
+                  '주먹지도 · 내 주변 등록 가게',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _isDefaultLocation
                       ? AppColors.softGray
@@ -705,9 +768,7 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _isDefaultLocation
-                          ? '기본 지도 위치'
-                          : '내 위치',
+                      _isDefaultLocation ? '기본 지도 위치' : '내 위치',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -725,8 +786,11 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                   _onMyLocationButtonPressed();
                   _loadRestaurants();
                 },
-                child: const Icon(Icons.refresh,
-                    size: 20, color: AppColors.textGray),
+                child: const Icon(
+                  Icons.refresh,
+                  size: 20,
+                  color: AppColors.textGray,
+                ),
               ),
             ],
           ),
@@ -738,28 +802,31 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
   /// 기본 지도 위치(강남역)를 표시 중일 때 그 사실과 사유, 대응 방법을 명확히
   /// 안내하는 배너. 위치 권한/서비스 상태에 따라 다른 안내와 버튼을 보여준다.
   Widget _defaultLocationBanner() {
-    final (String message, String actionLabel, VoidCallback action) =
-        switch (_locationPhase) {
+    final (
+      String message,
+      String actionLabel,
+      VoidCallback action,
+    ) = switch (_locationPhase) {
       _LocationPhase.deniedForever => (
-          '위치 권한이 거부되어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
-          '위치 권한 설정 열기',
-          () => Geolocator.openAppSettings(),
-        ),
+        '위치 권한이 거부되어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+        '위치 권한 설정 열기',
+        () => Geolocator.openAppSettings(),
+      ),
       _LocationPhase.serviceDisabled => (
-          '기기 위치 서비스가 꺼져 있어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
-          '위치 설정 열기',
-          () => Geolocator.openLocationSettings(),
-        ),
+        '기기 위치 서비스가 꺼져 있어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+        '위치 설정 열기',
+        () => Geolocator.openLocationSettings(),
+      ),
       _LocationPhase.denied => (
-          '위치 권한이 없어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
-          '다시 시도',
-          _retryLocation,
-        ),
+        '위치 권한이 없어 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+        '다시 시도',
+        _retryLocation,
+      ),
       _ => (
-          '현재 위치를 확인하지 못해 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
-          '다시 시도',
-          _retryLocation,
-        ),
+        '현재 위치를 확인하지 못해 ${AppConfig.defaultLocationLabel} 기준으로 표시하고 있어요.',
+        '다시 시도',
+        _retryLocation,
+      ),
     };
 
     return Positioned(
@@ -776,18 +843,27 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
             border: Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+              ),
             ],
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline_rounded,
-                  size: 16, color: AppColors.orange),
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: AppColors.orange,
+              ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(message,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.darkInk)),
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.darkInk,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               GestureDetector(
@@ -797,13 +873,18 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.orange),
+                          strokeWidth: 2,
+                          color: AppColors.orange,
+                        ),
                       )
-                    : Text(actionLabel,
+                    : Text(
+                        actionLabel,
                         style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.orange)),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.orange,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -835,17 +916,22 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
     );
   }
 
-  Widget _controlButton(IconData icon, VoidCallback? onTap,
-      {bool filled = false}) {
+  Widget _controlButton(
+    IconData icon,
+    VoidCallback? onTap, {
+    bool filled = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: filled ? AppColors.orange : Colors.white,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-              color: (filled ? AppColors.orange : Colors.black)
-                  .withValues(alpha: filled ? 0.4 : 0.15),
-              blurRadius: filled ? 8 : 6),
+            color: (filled ? AppColors.orange : Colors.black).withValues(
+              alpha: filled ? 0.4 : 0.15,
+            ),
+            blurRadius: filled ? 8 : 6,
+          ),
         ],
       ),
       child: IconButton(
@@ -901,16 +987,22 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 12),
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+              ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('내 주변 ${_nearbyRestaurants.length}곳',
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w900)),
+              Text(
+                '내 주변 ${_nearbyRestaurants.length}곳',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               const SizedBox(height: 8),
               Row(
                 children: chips.map((r) {
@@ -921,32 +1013,39 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                         onTap: () => _onMarkerTap(r),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.ivory,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                                color:
-                                    AppColors.orange.withValues(alpha: 0.3)),
+                              color: AppColors.orange.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(r.name,
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis),
+                              Text(
+                                r.name,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               const SizedBox(height: 2),
                               Text(
-                                  _distanceKm(r) < 1
-                                      ? '${(_distanceKm(r) * 1000).round()}m'
-                                      : '${_distanceKm(r).toStringAsFixed(1)}km',
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.orange,
-                                      fontWeight: FontWeight.w600)),
+                                _distanceKm(r) < 1
+                                    ? '${(_distanceKm(r) * 1000).round()}m'
+                                    : '${_distanceKm(r).toStringAsFixed(1)}km',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.orange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -977,15 +1076,19 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12), blurRadius: 12),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 12,
+              ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('아직 내 주변에 등록된 가게가 없어요.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+              const Text(
+                '아직 내 주변에 등록된 가게가 없어요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -998,8 +1101,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                         foregroundColor: Colors.white,
                         minimumSize: const Size(0, 44),
                       ),
-                      child:
-                          const Text('오늘 메뉴 뽑기', style: TextStyle(fontSize: 13)),
+                      child: const Text(
+                        '오늘 메뉴 뽑기',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1012,8 +1117,10 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
                         side: const BorderSide(color: AppColors.orange),
                         minimumSize: const Size(0, 44),
                       ),
-                      child: const Text('내 가게 등록하기',
-                          style: TextStyle(fontSize: 13)),
+                      child: const Text(
+                        '내 가게 등록하기',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                   ),
                 ],
@@ -1038,17 +1145,22 @@ class _JumeokMapScreenState extends State<JumeokMapScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+              ),
             ],
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: AppColors.orange)),
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.orange,
+                ),
+              ),
               SizedBox(width: 10),
               Text('가게 불러오는 중...', style: TextStyle(fontSize: 13)),
             ],

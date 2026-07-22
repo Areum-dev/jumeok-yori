@@ -82,24 +82,24 @@ class OwnerStoreApplication {
 
   /// insert 용 (id / 상태 / 리뷰필드 제외)
   Map<String, dynamic> toInsertJson() => {
-        'user_id': userId,
-        'business_number': businessNumber,
-        'store_name': storeName,
-        'owner_name': ownerName,
-        'phone': phone,
-        'address': address,
-        'detail_address': detailAddress,
-        'category': category,
-        'description': description,
-        'opening_hours': openingHours,
-        'is_takeout_available': isTakeoutAvailable,
-        'is_delivery_available': isDeliveryAvailable,
-        'business_license_image_url': businessLicenseImageUrl,
-        'lat': lat,
-        'lng': lng,
-        'geocoding_status': geocodingStatus,
-        'geocoding_error': geocodingError,
-      };
+    'user_id': userId,
+    'business_number': businessNumber,
+    'store_name': storeName,
+    'owner_name': ownerName,
+    'phone': phone,
+    'address': address,
+    'detail_address': detailAddress,
+    'category': category,
+    'description': description,
+    'opening_hours': openingHours,
+    'is_takeout_available': isTakeoutAvailable,
+    'is_delivery_available': isDeliveryAvailable,
+    'business_license_image_url': businessLicenseImageUrl,
+    'lat': lat,
+    'lng': lng,
+    'geocoding_status': geocodingStatus,
+    'geocoding_error': geocodingError,
+  };
 
   String get statusLabel {
     switch (status) {

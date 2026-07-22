@@ -39,10 +39,12 @@ android {
         minSdk = flutter.minSdkVersion
         // 2026-07-22: Google Play 정책 대응 - Android 16(API 36) 이상 타겟팅 필수.
         targetSdk = 36
-        // 2026-07-22: 카카오 로그인 KOE205 수정 반영.
-        // pubspec.yaml(1.1.0+6)의 빌드 번호와 동일하게 동기화.
-        versionCode = 6
-        versionName = "1.1.0"
+        // 2026-07-23: 버전을 여러 파일에 하드코딩해 동기화를 깜빡하는 실수를
+        // 반복하지 않도록, Flutter 표준 템플릿과 동일하게 pubspec.yaml 의
+        // version 값을 그대로 따라가도록 변경 (flutter.versionCode/versionName
+        // 은 Flutter 툴체인이 pubspec.yaml 에서 읽어 local.properties 에 채워줌).
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     buildTypes {

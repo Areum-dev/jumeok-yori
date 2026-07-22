@@ -49,9 +49,10 @@ class _DrawLoadingScreenState extends State<DrawLoadingScreen>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _bounceAnim = Tween<double>(begin: 0, end: -20).animate(
-      CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut),
-    );
+    _bounceAnim = Tween<double>(
+      begin: 0,
+      end: -20,
+    ).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
     _bounceCtrl.repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _start());
@@ -139,33 +140,34 @@ class _DrawLoadingScreenState extends State<DrawLoadingScreen>
   }
 
   Widget _emptyState() => Scaffold(
-        backgroundColor: AppColors.ivory,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('😔', style: TextStyle(fontSize: 60)),
-              const SizedBox(height: 20),
-              const Text('조건에 맞는 메뉴가 없어요.',
-                  style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              const Text('거리, 가격, 카테고리 조건을 넓혀보세요.',
-                  style: TextStyle(color: AppColors.textGray)),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () =>
-                    Navigator.pushReplacementNamed(context, '/filter'),
-                child: const Text('필터 다시 설정'),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () =>
-                    Navigator.pushReplacementNamed(context, '/home'),
-                child: const Text('홈으로'),
-              ),
-            ],
+    backgroundColor: AppColors.ivory,
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('😔', style: TextStyle(fontSize: 60)),
+          const SizedBox(height: 20),
+          const Text(
+            '조건에 맞는 메뉴가 없어요.',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
           ),
-        ),
-      );
+          const SizedBox(height: 8),
+          const Text(
+            '거리, 가격, 카테고리 조건을 넓혀보세요.',
+            style: TextStyle(color: AppColors.textGray),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, '/filter'),
+            child: const Text('필터 다시 설정'),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+            child: const Text('홈으로'),
+          ),
+        ],
+      ),
+    ),
+  );
 }

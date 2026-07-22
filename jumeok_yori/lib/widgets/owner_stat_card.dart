@@ -43,9 +43,10 @@ class OwnerStatCard extends StatelessWidget {
                 child: Text(
                   label,
                   style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textGray,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 12,
+                    color: AppColors.textGray,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -56,14 +57,17 @@ class OwnerStatCard extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                color: AppColors.darkInk),
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: AppColors.darkInk,
+            ),
           ),
           if (subtitle != null)
-            Text(subtitle!,
-                style: const TextStyle(fontSize: 10, color: AppColors.textGray),
-                maxLines: 2),
+            Text(
+              subtitle!,
+              style: const TextStyle(fontSize: 10, color: AppColors.textGray),
+              maxLines: 2,
+            ),
         ],
       ),
     );

@@ -42,15 +42,15 @@ class RecommendationFilter {
   }
 
   Map<String, dynamic> toJson() => {
-        'distanceKm': distanceKm,
-        'maxPrice': maxPrice,
-        'category': category,
-        'soloFriendly': soloFriendly,
-        'takeoutAvailable': takeoutAvailable,
-        'deliveryAvailable': deliveryAvailable,
-        'veganOption': veganOption,
-        'excludeRecent': excludeRecent,
-      };
+    'distanceKm': distanceKm,
+    'maxPrice': maxPrice,
+    'category': category,
+    'soloFriendly': soloFriendly,
+    'takeoutAvailable': takeoutAvailable,
+    'deliveryAvailable': deliveryAvailable,
+    'veganOption': veganOption,
+    'excludeRecent': excludeRecent,
+  };
 
   String get distanceLabel {
     if (distanceKm < 1.0) return '${(distanceKm * 1000).round()}m';
@@ -62,11 +62,7 @@ class RecommendationFilter {
   String get categoryLabel => category ?? '전체';
 
   String get summaryText {
-    final parts = <String>[
-      '$distanceLabel 이내',
-      priceLabel,
-      categoryLabel,
-    ];
+    final parts = <String>['$distanceLabel 이내', priceLabel, categoryLabel];
     if (soloFriendly) parts.add('혼밥');
     if (takeoutAvailable) parts.add('포장');
     if (deliveryAvailable) parts.add('배달');
@@ -76,9 +72,9 @@ class RecommendationFilter {
 
   static String _formatPrice(int price) {
     final formatted = price.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+$)'),
-          (m) => '${m[1]},',
-        );
+      RegExp(r'(\d)(?=(\d{3})+$)'),
+      (m) => '${m[1]},',
+    );
     return '$formatted원';
   }
 }

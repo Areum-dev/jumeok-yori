@@ -73,12 +73,18 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
     final address = _addressCtrl.text.trim();
     final oldAddress = widget.restaurant.address;
     // 수동 입력 좌표 우선, 없으면 기존 좌표, 그것도 없으면 null
-    double? newLat = _manualLat ?? (widget.restaurant.lat != 0 ? widget.restaurant.lat : null);
-    double? newLng = _manualLng ?? (widget.restaurant.lng != 0 ? widget.restaurant.lng : null);
+    double? newLat =
+        _manualLat ??
+        (widget.restaurant.lat != 0 ? widget.restaurant.lat : null);
+    double? newLng =
+        _manualLng ??
+        (widget.restaurant.lng != 0 ? widget.restaurant.lng : null);
     bool geocodingFailed = false;
 
     // 수동 좌표가 없고 (주소 변경 or 좌표 없음) → 자동 지오코딩 시도
-    if (_manualLat == null && address.isNotEmpty && (address != oldAddress || newLat == null)) {
+    if (_manualLat == null &&
+        address.isNotEmpty &&
+        (address != oldAddress || newLat == null)) {
       try {
         final result = await GeocodingService.geocodeAddress(address);
         if (result.success) {
@@ -134,7 +140,9 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
       if (!mounted) return;
       setState(() => _saving = false);
 
-      if (mounted) setState(() => _geocodingFailed = geocodingFailed && newLat == null);
+      if (mounted) {
+        setState(() => _geocodingFailed = geocodingFailed && newLat == null);
+      }
       if (geocodingFailed && newLat == null) {
         _snack('주소는 저장됐지만 좌표 변환에 실패했어요. 아래에서 직접 입력해 주세요.');
         setState(() => _saving = false);
@@ -152,8 +160,7 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
 
   void _snack(String msg) {
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -162,8 +169,10 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
     return Scaffold(
       backgroundColor: AppColors.ivory,
       appBar: AppBar(
-        title: const Text('가게 정보 수정',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          '가게 정보 수정',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         backgroundColor: AppColors.ivory,
         elevation: 0,
         actions: [
@@ -174,12 +183,18 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.orange))
-                : const Text('저장',
+                      strokeWidth: 2,
+                      color: AppColors.orange,
+                    ),
+                  )
+                : const Text(
+                    '저장',
                     style: TextStyle(
-                        color: AppColors.orange,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15)),
+                      color: AppColors.orange,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -224,21 +239,40 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
                     children: [
                       Icon(Icons.warning_amber, color: Colors.amber, size: 18),
                       SizedBox(width: 6),
-                      Text('자동 좌표 변환 실패',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text(
+                        '자동 좌표 변환 실패',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     '주소로 자동 좌표를 찾지 못했어요.\n지도에 표시하려면 아래에 위도/경도를 직접 입력해 주세요.\n(구글 지도에서 가게 주소 검색 후 핀 탭 → 좌표 복사)',
-                    style: TextStyle(fontSize: 12, color: AppColors.textGray, height: 1.5),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textGray,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _coordField('위도 (예: 37.4979)', (v) => _manualLat = double.tryParse(v))),
+                      Expanded(
+                        child: _coordField(
+                          '위도 (예: 37.4979)',
+                          (v) => _manualLat = double.tryParse(v),
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: _coordField('경도 (예: 127.0276)', (v) => _manualLng = double.tryParse(v))),
+                      Expanded(
+                        child: _coordField(
+                          '경도 (예: 127.0276)',
+                          (v) => _manualLng = double.tryParse(v),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -256,9 +290,21 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: _saving
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('저장하기',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      '저장하기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -267,10 +313,21 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
   }
 
   Widget _coordField(String hint, void Function(String) onChanged) => TextField(
-        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-        decoration: InputDecoration(hintText: hint, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10)),
-        onChanged: (v) { setState(() { onChanged(v); }); },
-      );
+    keyboardType: const TextInputType.numberWithOptions(
+      decimal: true,
+      signed: true,
+    ),
+    decoration: InputDecoration(
+      hintText: hint,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    ),
+    onChanged: (v) {
+      setState(() {
+        onChanged(v);
+      });
+    },
+  );
 
   Widget _field(
     String label,
@@ -278,17 +335,13 @@ class _OwnerStoreEditScreenState extends State<OwnerStoreEditScreen> {
     TextInputType? keyboardType,
     String? hint,
     int maxLines = 1,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextField(
-          controller: ctrl,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-          ),
-        ),
-      );
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: TextField(
+      controller: ctrl,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(labelText: label, hintText: hint),
+    ),
+  );
 }

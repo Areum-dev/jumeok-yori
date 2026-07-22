@@ -51,7 +51,7 @@ class _OwnerStoreApplicationScreenState
       _detailAddress,
       _description,
       _openingHours,
-      _licenseUrl
+      _licenseUrl,
     ]) {
       c.dispose();
     }
@@ -129,16 +129,20 @@ class _OwnerStoreApplicationScreenState
       ownerName: _ownerName.text.trim().isEmpty ? null : _ownerName.text.trim(),
       phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
       address: address.isEmpty ? null : address,
-      detailAddress:
-          _detailAddress.text.trim().isEmpty ? null : _detailAddress.text.trim(),
+      detailAddress: _detailAddress.text.trim().isEmpty
+          ? null
+          : _detailAddress.text.trim(),
       category: _category,
-      description:
-          _description.text.trim().isEmpty ? null : _description.text.trim(),
-      openingHours:
-          _openingHours.text.trim().isEmpty ? null : _openingHours.text.trim(),
+      description: _description.text.trim().isEmpty
+          ? null
+          : _description.text.trim(),
+      openingHours: _openingHours.text.trim().isEmpty
+          ? null
+          : _openingHours.text.trim(),
       isTakeoutAvailable: _takeout,
       isDeliveryAvailable: _delivery,
-      businessLicenseImageUrl: _uploadedLicenseUrl ??
+      businessLicenseImageUrl:
+          _uploadedLicenseUrl ??
           (_licenseUrl.text.trim().isEmpty ? null : _licenseUrl.text.trim()),
       lat: lat,
       lng: lng,
@@ -206,9 +210,13 @@ class _OwnerStoreApplicationScreenState
             _field(_openingHours, '영업시간 (예: 11:00~21:00)'),
             _field(_description, '가게 소개', maxLines: 3),
             const SizedBox(height: 12),
-            const Text('카테고리',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.darkInk)),
+            const Text(
+              '카테고리',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkInk,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -240,9 +248,13 @@ class _OwnerStoreApplicationScreenState
               ],
             ),
             const SizedBox(height: 16),
-            const Text('사업자등록증',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.darkInk)),
+            const Text(
+              '사업자등록증',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkInk,
+              ),
+            ),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _uploading ? null : _pickLicense,
@@ -257,32 +269,39 @@ class _OwnerStoreApplicationScreenState
                 child: _uploading
                     ? const Center(child: CircularProgressIndicator())
                     : _licenseImage != null
-                        ? Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: _imagePreview(_licenseImage!),
-                              ),
-                              if (_uploadedLicenseUrl != null)
-                                const Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Icon(Icons.check_circle,
-                                      color: AppColors.success),
-                                ),
-                            ],
-                          )
-                        : const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.upload_outlined,
-                                  size: 32, color: AppColors.midGray),
-                              SizedBox(height: 8),
-                              Text('사업자등록증 업로드',
-                                  style: TextStyle(color: AppColors.textGray)),
-                            ],
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: _imagePreview(_licenseImage!),
                           ),
+                          if (_uploadedLicenseUrl != null)
+                            const Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              ),
+                            ),
+                        ],
+                      )
+                    : const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.upload_outlined,
+                            size: 32,
+                            color: AppColors.midGray,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            '사업자등록증 업로드',
+                            style: TextStyle(color: AppColors.textGray),
+                          ),
+                        ],
+                      ),
               ),
             ),
             if (_showUrlFallback) ...[
@@ -306,24 +325,27 @@ class _OwnerStoreApplicationScreenState
   }
 
   Widget _imagePreview(XFile file) => FutureBuilder(
-        future: file.readAsBytes(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return Image.memory(snapshot.data!, fit: BoxFit.cover);
-        },
-      );
+    future: file.readAsBytes(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return Image.memory(snapshot.data!, fit: BoxFit.cover);
+    },
+  );
 
-  Widget _field(TextEditingController c, String label,
-          {int maxLines = 1, TextInputType? keyboard}) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: TextField(
-          controller: c,
-          maxLines: maxLines,
-          keyboardType: keyboard,
-          decoration: InputDecoration(labelText: label),
-        ),
-      );
+  Widget _field(
+    TextEditingController c,
+    String label, {
+    int maxLines = 1,
+    TextInputType? keyboard,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextField(
+      controller: c,
+      maxLines: maxLines,
+      keyboardType: keyboard,
+      decoration: InputDecoration(labelText: label),
+    ),
+  );
 }

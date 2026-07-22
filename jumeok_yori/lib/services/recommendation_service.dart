@@ -27,8 +27,7 @@ class RecommendationService {
       final r = item.restaurant;
       if (r == null) return false;
 
-      final dist =
-          DistanceService.calculateKm(userLat, userLng, r.lat, r.lng);
+      final dist = DistanceService.calculateKm(userLat, userLng, r.lat, r.lng);
       r.distanceKm = dist;
       if (dist > filter.distanceKm) return false;
 
@@ -74,10 +73,12 @@ class RecommendationService {
     // ── 4. 통합 & 선택 ──
     final results = <RecommendationResult>[];
     for (final i in regCandidates) {
-      results.add(RecommendationResult.registered(
-        i,
-        distanceM: (i.restaurant?.distanceKm ?? 0) * 1000,
-      ));
+      results.add(
+        RecommendationResult.registered(
+          i,
+          distanceM: (i.restaurant?.distanceKm ?? 0) * 1000,
+        ),
+      );
     }
     for (final m in starterCandidates) {
       results.add(RecommendationResult.starter(m));

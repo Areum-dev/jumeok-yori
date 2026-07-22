@@ -12,8 +12,7 @@ class AuthRepository {
 
   Stream<AuthState> get authStateChanges => _authService.authStateChanges;
 
-  Future<void> signUp(String email, String password,
-          {String? displayName}) =>
+  Future<void> signUp(String email, String password, {String? displayName}) =>
       _authService.signUp(email, password, displayName: displayName);
 
   Future<void> signIn(String email, String password) =>
@@ -21,8 +20,7 @@ class AuthRepository {
 
   Future<bool> signInWithKakao() => _authService.signInWithKakao();
 
-  Future<void> resetPassword(String email) =>
-      _authService.resetPassword(email);
+  Future<void> resetPassword(String email) => _authService.resetPassword(email);
 
   Future<void> signOut() => _authService.signOut();
 

@@ -110,8 +110,12 @@ class _MarkdownText extends StatelessWidget {
         widgets.add(const SizedBox(height: 2));
       } else if (RegExp(r'^\d+\.').hasMatch(trimmed)) {
         final dot = trimmed.indexOf('.');
-        widgets.add(_bulletItem(trimmed.substring(dot + 1).trim(),
-            prefix: '${trimmed.substring(0, dot + 1)} '));
+        widgets.add(
+          _bulletItem(
+            trimmed.substring(dot + 1).trim(),
+            prefix: '${trimmed.substring(0, dot + 1)} ',
+          ),
+        );
         widgets.add(const SizedBox(height: 2));
       } else {
         widgets.add(_paragraph(trimmed));
@@ -126,16 +130,16 @@ class _MarkdownText extends StatelessWidget {
   }
 
   Widget _heading(String text, double size, FontWeight weight) => Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: size,
-            fontWeight: weight,
-            color: AppColors.darkInk,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 8),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: size,
+        fontWeight: weight,
+        color: AppColors.darkInk,
+      ),
+    ),
+  );
 
   Widget _paragraph(String text) {
     // **bold** 파싱
@@ -153,14 +157,19 @@ class _MarkdownText extends StatelessWidget {
   }
 
   Widget _bulletItem(String text, {String prefix = '• '}) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(prefix,
-              style: const TextStyle(
-                  fontSize: 14, color: AppColors.textGray, height: 1.6)),
-          Expanded(child: _paragraph(text)),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        prefix,
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textGray,
+          height: 1.6,
+        ),
+      ),
+      Expanded(child: _paragraph(text)),
+    ],
+  );
 
   Widget _tableRow(String line) {
     if (line.replaceAll(RegExp(r'[-| ]'), '').isEmpty) {
@@ -200,10 +209,12 @@ class _MarkdownText extends StatelessWidget {
       if (match.start > last) {
         spans.add(TextSpan(text: text.substring(last, match.start)));
       }
-      spans.add(TextSpan(
-        text: match.group(1),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ));
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
       last = match.end;
     }
     if (last < text.length) {

@@ -83,7 +83,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                ...state.history.take(3).map(
+                ...state.history
+                    .take(3)
+                    .map(
                       (r) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: ResultSummaryCard(
@@ -113,8 +115,10 @@ class HomeScreen extends StatelessWidget {
                     Navigator.pushNamed(context, '/owner-apply');
                   }
                 },
-                icon: const Icon(Icons.storefront_outlined,
-                    color: AppColors.textGray),
+                icon: const Icon(
+                  Icons.storefront_outlined,
+                  color: AppColors.textGray,
+                ),
                 label: const Text(
                   '내 가게 등록하기',
                   style: TextStyle(color: AppColors.textGray),
@@ -124,8 +128,10 @@ class HomeScreen extends StatelessWidget {
                 TextButton.icon(
                   onPressed: () =>
                       Navigator.pushNamed(context, '/owner-dashboard'),
-                  icon: const Icon(Icons.dashboard_outlined,
-                      color: AppColors.textGray),
+                  icon: const Icon(
+                    Icons.dashboard_outlined,
+                    color: AppColors.textGray,
+                  ),
                   label: const Text(
                     '사장님 대시보드',
                     style: TextStyle(color: AppColors.textGray),
@@ -134,8 +140,10 @@ class HomeScreen extends StatelessWidget {
               if (state.isAdmin)
                 TextButton.icon(
                   onPressed: () => Navigator.pushNamed(context, '/admin'),
-                  icon: const Icon(Icons.admin_panel_settings_outlined,
-                      color: AppColors.orange),
+                  icon: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: AppColors.orange,
+                  ),
                   label: const Text(
                     '관리자 페이지',
                     style: TextStyle(color: AppColors.orange),
@@ -149,17 +157,20 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _modeBadge() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: AppColors.success.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: const Text('LIVE',
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: AppColors.success)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: AppColors.success.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: const Text(
+      'LIVE',
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        color: AppColors.success,
+      ),
+    ),
+  );
 
   Widget _locationBadge(BuildContext context, AppState state) =>
       GestureDetector(
@@ -194,8 +205,10 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              const Text('· 새로고침',
-                  style: TextStyle(fontSize: 11, color: AppColors.midGray)),
+              const Text(
+                '· 새로고침',
+                style: TextStyle(fontSize: 11, color: AppColors.midGray),
+              ),
             ],
           ),
         ),
@@ -241,8 +254,10 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.orangeLight,
                   borderRadius: BorderRadius.circular(8),
@@ -262,16 +277,16 @@ class HomeScreen extends StatelessWidget {
       );
 
   Widget _errorBox(String message) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          message,
-          style: const TextStyle(color: AppColors.error, fontSize: 13),
-          textAlign: TextAlign.center,
-        ),
-      );
+    width: double.infinity,
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: AppColors.error.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Text(
+      message,
+      style: const TextStyle(color: AppColors.error, fontSize: 13),
+      textAlign: TextAlign.center,
+    ),
+  );
 }

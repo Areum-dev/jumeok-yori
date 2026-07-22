@@ -63,17 +63,23 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     try {
       await _client
           ?.from('menu_items')
-          .update({'display_status': newStatus}).eq('id', m.id);
+          .update({'display_status': newStatus})
+          .eq('id', m.id);
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(
-                newStatus == 'approved' ? '메뉴를 다시 노출했어요.' : '메뉴를 숨겼어요.')));
+              newStatus == 'approved' ? '메뉴를 다시 노출했어요.' : '메뉴를 숨겼어요.',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('변경에 실패했어요.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('변경에 실패했어요.')));
       }
     }
   }
@@ -82,12 +88,14 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     try {
       await _client
           ?.from('menu_items')
-          .update({'is_available': !m.isAvailable}).eq('id', m.id);
+          .update({'is_available': !m.isAvailable})
+          .eq('id', m.id);
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('변경에 실패했어요.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('변경에 실패했어요.')));
       }
     }
   }
@@ -97,16 +105,19 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => _AddMenuSheet(
         restaurantId: widget.restaurantId,
         ownerId: widget.ownerId,
         onMenuAdded: () {
           _load();
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content:
-                    Text('메뉴가 등록됐어요.\n이제 주먹요리 뽑기와 내 가게 페이지에 노출됩니다.')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('메뉴가 등록됐어요.\n이제 주먹요리 뽑기와 내 가게 페이지에 노출됩니다.'),
+              ),
+            );
           }
         },
       ),
@@ -118,8 +129,10 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     return Scaffold(
       backgroundColor: AppColors.ivory,
       appBar: AppBar(
-        title: const Text('메뉴 관리',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          '메뉴 관리',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         backgroundColor: AppColors.ivory,
         elevation: 0,
       ),
@@ -131,27 +144,32 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.orange))
+              child: CircularProgressIndicator(color: AppColors.orange),
+            )
           : _menus.isEmpty
-              ? Center(
-                  child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text('🍽️', style: TextStyle(fontSize: 48)),
-                    SizedBox(height: 16),
-                    Text('아직 등록된 메뉴가 없어요.',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.w700)),
-                    SizedBox(height: 8),
-                    Text('메뉴를 추가해 뽑기에 노출해 보세요.',
-                        style: TextStyle(color: AppColors.textGray)),
-                  ],
-                ))
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                  itemCount: _menus.length,
-                  itemBuilder: (_, i) => _menuCard(_menus[i]),
-                ),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text('🍽️', style: TextStyle(fontSize: 48)),
+                  SizedBox(height: 16),
+                  Text(
+                    '아직 등록된 메뉴가 없어요.',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '메뉴를 추가해 뽑기에 노출해 보세요.',
+                    style: TextStyle(color: AppColors.textGray),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+              itemCount: _menus.length,
+              itemBuilder: (_, i) => _menuCard(_menus[i]),
+            ),
     );
   }
 
@@ -168,63 +186,80 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
             ? []
             : [
                 BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6)
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 6,
+                ),
               ],
       ),
-      child: Row(children: [
-        Expanded(
+      child: Row(
+        children: [
+          Expanded(
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Row(children: [
-                Expanded(
-                    child: Text(m.name,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        m.name,
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: isHidden
-                                ? AppColors.midGray
-                                : AppColors.darkInk))),
-                if (isHidden) _tag('숨김', Colors.grey),
-                if (isSoldOut && !isHidden) _tag('품절', Colors.red.shade300),
-              ]),
-              const SizedBox(height: 4),
-              Text('${_fmtPrice(m.price)}원',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isHidden
+                              ? AppColors.midGray
+                              : AppColors.darkInk,
+                        ),
+                      ),
+                    ),
+                    if (isHidden) _tag('숨김', Colors.grey),
+                    if (isSoldOut && !isHidden) _tag('품절', Colors.red.shade300),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_fmtPrice(m.price)}원',
                   style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color:
-                          isHidden ? AppColors.midGray : AppColors.orange)),
-            ])),
-        PopupMenuButton<String>(
-          onSelected: (v) {
-            if (v == 'toggle_display') _toggleDisplay(m);
-            if (v == 'toggle_available') _toggleAvailable(m);
-          },
-          itemBuilder: (_) => [
-            PopupMenuItem(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isHidden ? AppColors.midGray : AppColors.orange,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'toggle_display') _toggleDisplay(m);
+              if (v == 'toggle_available') _toggleAvailable(m);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
                 value: 'toggle_display',
-                child: Text(isHidden ? '다시 노출' : '숨기기')),
-            PopupMenuItem(
+                child: Text(isHidden ? '다시 노출' : '숨기기'),
+              ),
+              PopupMenuItem(
                 value: 'toggle_available',
-                child: Text(isSoldOut ? '판매 재개' : '품절 처리')),
-          ],
-        ),
-      ]),
+                child: Text(isSoldOut ? '판매 재개' : '품절 처리'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _tag(String text, Color color) => Container(
-        margin: const EdgeInsets.only(left: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(6)),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 10, color: color, fontWeight: FontWeight.w700)),
-      );
+    margin: const EdgeInsets.only(left: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+    ),
+  );
 
   String _fmtPrice(int p) {
     final s = p.toString();
@@ -282,7 +317,10 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
     final picker = ImagePicker();
     try {
       final picked = await picker.pickImage(
-          source: ImageSource.gallery, imageQuality: 80, maxWidth: 1200);
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1200,
+      );
       if (picked == null) return;
       setState(() {
         _pickedImage = picked;
@@ -293,11 +331,15 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
         final client = _client;
         if (client == null) throw Exception('no client');
         final bytes = await picked.readAsBytes();
-        final ext = picked.name.contains('.') ? picked.name.split('.').last : 'jpg';
+        final ext = picked.name.contains('.')
+            ? picked.name.split('.').last
+            : 'jpg';
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final path = 'menu_$timestamp.$ext';
 
-        await client.storage.from('menu-images').uploadBinary(
+        await client.storage
+            .from('menu-images')
+            .uploadBinary(
               path,
               bytes,
               fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),
@@ -315,8 +357,9 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
           _uploadingImage = false;
           _showUrlFallback = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('이미지 업로드에 실패했어요. URL을 직접 입력해 주세요.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이미지 업로드에 실패했어요. URL을 직접 입력해 주세요.')),
+        );
       }
     } catch (e) {
       debugPrint('Image pick failed: $e');
@@ -327,7 +370,8 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
     if (_nameCtrl.text.trim().isEmpty || _priceCtrl.text.trim().isEmpty) return;
     setState(() => _saving = true);
 
-    final imageUrl = _uploadedImageUrl ??
+    final imageUrl =
+        _uploadedImageUrl ??
         (_urlCtrl.text.trim().isNotEmpty ? _urlCtrl.text.trim() : null);
 
     try {
@@ -338,8 +382,9 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
         'owner_id': widget.ownerId,
         'name': _nameCtrl.text.trim(),
         'price': int.tryParse(_priceCtrl.text.trim()) ?? 0,
-        'description':
-            _descCtrl.text.trim().isNotEmpty ? _descCtrl.text.trim() : null,
+        'description': _descCtrl.text.trim().isNotEmpty
+            ? _descCtrl.text.trim()
+            : null,
         'image_url': ?imageUrl,
         'approval_status': 'approved',
         'display_status': 'approved',
@@ -357,8 +402,9 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('등록 실패: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('등록 실패: $e')));
       }
     }
   }
@@ -366,42 +412,57 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('메뉴 추가',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+            const Text(
+              '메뉴 추가',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 16),
             _buildImagePicker(),
             const SizedBox(height: 16),
             TextField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(
-                    labelText: '메뉴 이름 *', border: OutlineInputBorder())),
+              controller: _nameCtrl,
+              decoration: const InputDecoration(
+                labelText: '메뉴 이름 *',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 10),
             TextField(
-                controller: _priceCtrl,
-                decoration: const InputDecoration(
-                    labelText: '가격 (원) *', border: OutlineInputBorder()),
-                keyboardType: TextInputType.number),
+              controller: _priceCtrl,
+              decoration: const InputDecoration(
+                labelText: '가격 (원) *',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 10),
             TextField(
-                controller: _descCtrl,
-                decoration: const InputDecoration(
-                    labelText: '설명 (선택)', border: OutlineInputBorder()),
-                maxLines: 2),
+              controller: _descCtrl,
+              decoration: const InputDecoration(
+                labelText: '설명 (선택)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
             if (_showUrlFallback) ...[
               const SizedBox(height: 10),
               TextField(
-                  controller: _urlCtrl,
-                  decoration: const InputDecoration(
-                      labelText: '이미지 URL 직접 입력',
-                      border: OutlineInputBorder(),
-                      hintText: 'https://...')),
+                controller: _urlCtrl,
+                decoration: const InputDecoration(
+                  labelText: '이미지 URL 직접 입력',
+                  border: OutlineInputBorder(),
+                  hintText: 'https://...',
+                ),
+              ),
             ],
             const SizedBox(height: 16),
             SizedBox(
@@ -409,18 +470,26 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
+                  backgroundColor: AppColors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
                 child: _saving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('메뉴 등록하기',
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        '메뉴 등록하기',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 8),
@@ -443,60 +512,78 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
         ),
         child: _uploadingImage
             ? const Center(
-                child: CircularProgressIndicator(color: AppColors.orange))
+                child: CircularProgressIndicator(color: AppColors.orange),
+              )
             : _pickedImage != null
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(11),
-                        child: Image.file(File(_pickedImage!.path),
-                            fit: BoxFit.cover),
-                      ),
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(8)),
-                          child: const Text('사진 변경',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 12)),
-                        ),
-                      ),
-                      if (_uploadedImageUrl == null && !_uploadingImage)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                                color: Colors.orangeAccent,
-                                shape: BoxShape.circle),
-                            child: const Icon(Icons.upload,
-                                size: 14, color: Colors.white),
-                          ),
-                        ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_photo_alternate_outlined,
-                          size: 40, color: AppColors.midGray),
-                      const SizedBox(height: 8),
-                      const Text('메뉴 사진 추가',
-                          style: TextStyle(
-                              color: AppColors.midGray,
-                              fontWeight: FontWeight.w600)),
-                      const Text('탭하여 갤러리에서 선택',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.textGray)),
-                    ],
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: Image.file(
+                      File(_pickedImage!.path),
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '사진 변경',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                  if (_uploadedImageUrl == null && !_uploadingImage)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.orangeAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.upload,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 40,
+                    color: AppColors.midGray,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '메뉴 사진 추가',
+                    style: TextStyle(
+                      color: AppColors.midGray,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Text(
+                    '탭하여 갤러리에서 선택',
+                    style: TextStyle(fontSize: 11, color: AppColors.textGray),
+                  ),
+                ],
+              ),
       ),
     );
   }

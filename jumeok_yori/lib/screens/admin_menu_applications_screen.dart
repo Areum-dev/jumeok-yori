@@ -55,10 +55,13 @@ class _AdminMenuApplicationsScreenState
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('취소')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('반려')),
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('반려'),
+          ),
         ],
       ),
     );
@@ -83,8 +86,11 @@ class _AdminMenuApplicationsScreenState
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_menus.isEmpty) {
       return const Center(
-          child: Text('대기 중인 메뉴 신청이 없습니다.',
-              style: TextStyle(color: AppColors.textGray)));
+        child: Text(
+          '대기 중인 메뉴 신청이 없습니다.',
+          style: TextStyle(color: AppColors.textGray),
+        ),
+      );
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -104,20 +110,30 @@ class _AdminMenuApplicationsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.name,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w800)),
+                Text(
+                  m.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   '${m.restaurant?.name ?? ''} · ${m.priceText} · ${m.category}',
                   style: const TextStyle(
-                      fontSize: 13, color: AppColors.textGray),
+                    fontSize: 13,
+                    color: AppColors.textGray,
+                  ),
                 ),
                 if (m.description != null) ...[
                   const SizedBox(height: 4),
-                  Text(m.description!,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.midGray)),
+                  Text(
+                    m.description!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.midGray,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 12),
                 Row(

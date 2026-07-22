@@ -19,8 +19,11 @@ class AuthService {
   Stream<AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
 
-  Future<void> signUp(String email, String password,
-      {String? displayName}) async {
+  Future<void> signUp(
+    String email,
+    String password, {
+    String? displayName,
+  }) async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
     try {
@@ -118,20 +121,28 @@ class AuthService {
         // (my_page_screen 등에서 displayName.characters.first 를 쓰는데
         // 빈 문자열이면 예외가 발생한다.)
         final email = user.email;
+        final meta = user.userMetadata;
+        final metaNickname = _metaString(meta, [
+          'full_name',
+          'name',
+          'nickname',
+        ]);
         return Profile(
           id: user.id,
           email: email ?? '',
-          displayName: (email != null && email.contains('@'))
-              ? email.split('@').first
-              : '카카오 사용자',
+          displayName:
+              metaNickname ??
+              ((email != null && email.contains('@'))
+                  ? email.split('@').first
+                  : '카카오 사용자'),
+          avatarUrl: _metaString(meta, ['avatar_url', 'picture']),
           role: _roleFromEmail(email),
           createdAt: DateTime.now(),
         );
       }
       final profile = Profile.fromJson(res);
       // 관리자 이메일이면 role 보정 (DB role 우선)
-      if (profile.role != 'admin' &&
-          profile.email == AppConfig.adminEmail) {
+      if (profile.role != 'admin' && profile.email == AppConfig.adminEmail) {
         return profile.copyWith(role: 'admin');
       }
       return profile;
@@ -143,12 +154,24 @@ class AuthService {
   String _roleFromEmail(String? email) =>
       email == AppConfig.adminEmail ? 'admin' : 'user';
 
+  /// OAuth 프로바이더가 넘겨준 user_metadata 에서 후보 키를 순서대로 찾아
+  /// 첫 번째로 존재하는 비어있지 않은 문자열을 반환합니다. 없으면 null.
+  String? _metaString(Map<String, dynamic>? meta, List<String> keys) {
+    if (meta == null) return null;
+    for (final key in keys) {
+      final value = meta[key];
+      if (value is String && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
   String _koreanError(String message) {
     final m = message.toLowerCase();
     if (m.contains('invalid login') || m.contains('invalid credentials')) {
       return '이메일 또는 비밀번호가 올바르지 않습니다.';
     }
-    if (m.contains('already registered') || m.contains('already been registered')) {
+    if (m.contains('already registered') ||
+        m.contains('already been registered')) {
       return '이미 가입된 이메일입니다.';
     }
     if (m.contains('password') && m.contains('6')) {

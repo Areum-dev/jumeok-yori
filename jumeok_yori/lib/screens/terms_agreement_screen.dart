@@ -106,14 +106,12 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 전체 동의
-                    _AllAgreeRow(
-                      checked: _allItems,
-                      onChanged: _toggleAll,
-                    ),
+                    _AllAgreeRow(checked: _allItems, onChanged: _toggleAll),
                     const Divider(
-                        color: AppColors.softGray,
-                        thickness: 1,
-                        height: 24),
+                      color: AppColors.softGray,
+                      thickness: 1,
+                      height: 24,
+                    ),
 
                     // 필수 항목 섹션
                     const _SectionLabel(text: '필수 동의'),
@@ -123,19 +121,15 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       label: '[필수] 서비스 이용약관 동의',
                       checked: _terms,
                       onChanged: (v) => setState(() => _terms = v),
-                      onViewTap: () => _openDoc(
-                        '서비스 이용약관',
-                        'lib/legal/terms.md',
-                      ),
+                      onViewTap: () =>
+                          _openDoc('서비스 이용약관', 'lib/legal/terms.md'),
                     ),
                     _AgreementRow(
                       label: '[필수] 개인정보처리방침 동의',
                       checked: _privacy,
                       onChanged: (v) => setState(() => _privacy = v),
-                      onViewTap: () => _openDoc(
-                        '개인정보처리방침',
-                        'lib/legal/privacy.md',
-                      ),
+                      onViewTap: () =>
+                          _openDoc('개인정보처리방침', 'lib/legal/privacy.md'),
                     ),
                     _AgreementRow(
                       label: '[필수] 개인정보 수집 및 이용 동의',
@@ -150,10 +144,8 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       label: '[필수] 위치정보 이용약관 동의',
                       checked: _locationPolicy,
                       onChanged: (v) => setState(() => _locationPolicy = v),
-                      onViewTap: () => _openDoc(
-                        '위치정보 이용약관',
-                        'lib/legal/location-policy.md',
-                      ),
+                      onViewTap: () =>
+                          _openDoc('위치정보 이용약관', 'lib/legal/location-policy.md'),
                     ),
                     _AgreementRow(
                       label: '[필수] 위치정보 수집 및 이용 동의',
@@ -182,10 +174,8 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                       label: '[선택] 마케팅 정보 수신 동의',
                       checked: _marketing,
                       onChanged: _onMarketingChanged,
-                      onViewTap: () => _openDoc(
-                        '마케팅 정보 수신 동의',
-                        'lib/legal/marketing.md',
-                      ),
+                      onViewTap: () =>
+                          _openDoc('마케팅 정보 수신 동의', 'lib/legal/marketing.md'),
                     ),
 
                     // 마케팅 하위 항목
@@ -216,10 +206,7 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                     const SizedBox(height: 16),
                     Text(
                       '선택 항목에 동의하지 않아도 서비스 이용이 가능합니다.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textGray,
-                      ),
+                      style: TextStyle(fontSize: 12, color: AppColors.textGray),
                     ),
                   ],
                 ),
@@ -235,8 +222,9 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
                 child: ElevatedButton(
                   onPressed: _allRequired ? _confirm : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _allRequired ? AppColors.orange : AppColors.softGray,
+                    backgroundColor: _allRequired
+                        ? AppColors.orange
+                        : AppColors.softGray,
                     foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -314,10 +302,7 @@ class _AgreementRow extends StatelessWidget {
               onTap: () => onChanged(!checked),
               child: Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.darkInk,
-                ),
+                style: const TextStyle(fontSize: 14, color: AppColors.darkInk),
               ),
             ),
           ),
@@ -327,8 +312,7 @@ class _AgreementRow extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textGray,
                 minimumSize: const Size(0, 0),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               ),
               child: const Text('보기', style: TextStyle(fontSize: 13)),
             ),
@@ -362,10 +346,7 @@ class _SubAgreementRow extends StatelessWidget {
               onTap: () => onChanged(!checked),
               child: Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textGray,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppColors.textGray),
               ),
             ),
           ),
@@ -403,8 +384,7 @@ class _Checkbox extends StatelessWidget {
           borderRadius: BorderRadius.circular(size / 4),
         ),
         child: checked
-            ? Icon(Icons.check,
-                size: size * 0.7, color: AppColors.white)
+            ? Icon(Icons.check, size: size * 0.7, color: AppColors.white)
             : null,
       ),
     );

@@ -41,7 +41,10 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: const TextStyle(
-                    fontSize: 14, color: AppColors.textGray, height: 1.5),
+                  fontSize: 14,
+                  color: AppColors.textGray,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

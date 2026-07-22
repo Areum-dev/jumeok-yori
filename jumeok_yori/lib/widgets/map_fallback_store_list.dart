@@ -27,12 +27,16 @@ class MapFallbackStoreList extends StatelessWidget {
           children: const [
             Text('🗺️', style: TextStyle(fontSize: 48)),
             SizedBox(height: 16),
-            Text('아직 등록된 가게가 없어요.',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              '아직 등록된 가게가 없어요.',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
             SizedBox(height: 8),
-            Text('사장님 등록 후 관리자 승인이 완료되면\n이 화면에 가게가 표시됩니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textGray, height: 1.5)),
+            Text(
+              '사장님 등록 후 관리자 승인이 완료되면\n이 화면에 가게가 표시됩니다.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textGray, height: 1.5),
+            ),
           ],
         ),
       );
@@ -61,7 +65,8 @@ class MapFallbackStoreList extends StatelessWidget {
     const r = 6371.0;
     final dLat = (lat2 - lat1) * math.pi / 180;
     final dLng = (lng2 - lng1) * math.pi / 180;
-    final a = math.pow(math.sin(dLat / 2), 2) +
+    final a =
+        math.pow(math.sin(dLat / 2), 2) +
         math.cos(lat1 * math.pi / 180) *
             math.cos(lat2 * math.pi / 180) *
             math.pow(math.sin(dLng / 2), 2);

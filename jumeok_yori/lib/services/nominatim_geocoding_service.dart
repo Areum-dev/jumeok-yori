@@ -16,7 +16,10 @@ class NominatimGeocodingService {
   static Future<GeocodingResult> geocodeAddress(String address) async {
     final cleaned = address.trim();
     if (cleaned.isEmpty) {
-      return const GeocodingResult(success: false, errorMessage: '주소를 입력해 주세요.');
+      return const GeocodingResult(
+        success: false,
+        errorMessage: '주소를 입력해 주세요.',
+      );
     }
 
     // 1차 시도: 원본 주소
@@ -49,7 +52,9 @@ class NominatimGeocodingService {
           .get(url, headers: _headers)
           .timeout(const Duration(seconds: 12));
 
-      debugPrint('[Nominatim] status=${response.statusCode} body=${response.body.substring(0, response.body.length.clamp(0, 200))}');
+      debugPrint(
+        '[Nominatim] status=${response.statusCode} body=${response.body.substring(0, response.body.length.clamp(0, 200))}',
+      );
 
       if (response.statusCode != 200) {
         return GeocodingResult(

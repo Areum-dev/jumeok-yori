@@ -49,7 +49,7 @@ class LocationService {
 
   /// 항상 좌표를 반환 (실패 시 강남역 기본값)
   static Future<({double lat, double lng, bool isDefault})>
-      getPositionOrDefault() async {
+  getPositionOrDefault() async {
     final pos = await getCurrentPosition();
     if (pos == null) {
       return (

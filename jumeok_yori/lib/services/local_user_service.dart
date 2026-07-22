@@ -7,7 +7,8 @@ class LocalUserService {
   static const _keySavedStarter = 'saved_starter_ids';
 
   // ── 최근 추천 (등록 메뉴) ──
-  static Future<List<String>> getRecentRegisteredIds() => _getList(_keyRecentReg);
+  static Future<List<String>> getRecentRegisteredIds() =>
+      _getList(_keyRecentReg);
   static Future<void> addRecentRegisteredId(String id) =>
       _addToFront(_keyRecentReg, id, max: 20);
 
@@ -25,10 +26,13 @@ class LocalUserService {
 
   // ── 저장한 메뉴 ──
   static Future<List<String>> getSavedRegisteredIds() => _getList(_keySavedReg);
-  static Future<List<String>> getSavedStarterIds() => _getList(_keySavedStarter);
+  static Future<List<String>> getSavedStarterIds() =>
+      _getList(_keySavedStarter);
 
-  static Future<void> toggleSaved(
-      {required bool isRegistered, required String id}) async {
+  static Future<void> toggleSaved({
+    required bool isRegistered,
+    required String id,
+  }) async {
     final key = isRegistered ? _keySavedReg : _keySavedStarter;
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(key) ?? [];
@@ -40,8 +44,10 @@ class LocalUserService {
     await prefs.setStringList(key, list);
   }
 
-  static Future<bool> isSaved(
-      {required bool isRegistered, required String id}) async {
+  static Future<bool> isSaved({
+    required bool isRegistered,
+    required String id,
+  }) async {
     final key = isRegistered ? _keySavedReg : _keySavedStarter;
     final list = await _getList(key);
     return list.contains(id);
@@ -53,8 +59,11 @@ class LocalUserService {
     return prefs.getStringList(key) ?? [];
   }
 
-  static Future<void> _addToFront(String key, String id,
-      {required int max}) async {
+  static Future<void> _addToFront(
+    String key,
+    String id, {
+    required int max,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(key) ?? [];
     list.remove(id);

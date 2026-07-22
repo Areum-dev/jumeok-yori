@@ -32,27 +32,27 @@ class StarterMenu {
   });
 
   factory StarterMenu.fromJson(Map<String, dynamic> json) => StarterMenu(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        description: json['description'] as String?,
-        category: (json['category'] as String?) ?? '기타',
-        expectedMinPrice: (json['expected_min_price'] as num?)?.toInt(),
-        expectedMaxPrice: (json['expected_max_price'] as num?)?.toInt(),
-        imageUrl: json['image_url'] as String?,
-        isSoloFriendly: json['is_solo_friendly'] as bool? ?? false,
-        isTakeoutFriendly: json['is_takeout_friendly'] as bool? ?? false,
-        isDeliveryFriendly: json['is_delivery_friendly'] as bool? ?? false,
-        isVeganOption: json['is_vegan_option'] as bool? ?? false,
-        searchKeyword: json['search_keyword'] as String?,
-        source: json['source'] as String? ?? 'starter_menu',
-        displayStatus: json['display_status'] as String? ?? 'approved',
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    description: json['description'] as String?,
+    category: (json['category'] as String?) ?? '기타',
+    expectedMinPrice: (json['expected_min_price'] as num?)?.toInt(),
+    expectedMaxPrice: (json['expected_max_price'] as num?)?.toInt(),
+    imageUrl: json['image_url'] as String?,
+    isSoloFriendly: json['is_solo_friendly'] as bool? ?? false,
+    isTakeoutFriendly: json['is_takeout_friendly'] as bool? ?? false,
+    isDeliveryFriendly: json['is_delivery_friendly'] as bool? ?? false,
+    isVeganOption: json['is_vegan_option'] as bool? ?? false,
+    searchKeyword: json['search_keyword'] as String?,
+    source: json['source'] as String? ?? 'starter_menu',
+    displayStatus: json['display_status'] as String? ?? 'approved',
+  );
 
   String get priceRangeText {
     String fmt(int p) => p.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+$)'),
-          (m) => '${m[1]},',
-        );
+      RegExp(r'(\d)(?=(\d{3})+$)'),
+      (m) => '${m[1]},',
+    );
     if (expectedMinPrice == null && expectedMaxPrice == null) return '가격 정보 없음';
     if (expectedMinPrice != null && expectedMaxPrice != null) {
       return '${fmt(expectedMinPrice!)} ~ ${fmt(expectedMaxPrice!)}원';

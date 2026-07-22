@@ -78,7 +78,8 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final status = appState.myStoreApplicationStatus;
-    final isApproved = status == 'approved' ||
+    final isApproved =
+        status == 'approved' ||
         appState.isOwner ||
         appState.isAdmin ||
         _myRestaurant != null;
@@ -86,52 +87,60 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
     return Scaffold(
       backgroundColor: AppColors.ivory,
       appBar: AppBar(
-        title:
-            const Text('내 가게', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          '내 가게',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         backgroundColor: AppColors.ivory,
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _load)
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.orange))
+              child: CircularProgressIndicator(color: AppColors.orange),
+            )
           : isApproved
-              ? _approvedView(appState)
-              : _pendingView(),
+          ? _approvedView(appState)
+          : _pendingView(),
     );
   }
 
   Widget _pendingView() => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('⏳', style: TextStyle(fontSize: 48)),
-              const SizedBox(height: 16),
-              const Text('관리자 승인 대기 중입니다.',
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              const Text('승인 후 메뉴를 등록할 수 있어요.',
-                  style: TextStyle(color: AppColors.textGray)),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                    color: AppColors.softGray,
-                    borderRadius: BorderRadius.circular(12)),
-                child: const Text('신청 내역을 확인하려면 관리자에게 문의해 주세요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 13, color: AppColors.textGray)),
-              ),
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('⏳', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 16),
+          const Text(
+            '관리자 승인 대기 중입니다.',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
           ),
-        ),
-      );
+          const SizedBox(height: 8),
+          const Text(
+            '승인 후 메뉴를 등록할 수 있어요.',
+            style: TextStyle(color: AppColors.textGray),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.softGray,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text(
+              '신청 내역을 확인하려면 관리자에게 문의해 주세요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColors.textGray),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget _approvedView(AppState appState) {
     return RefreshIndicator(
@@ -150,8 +159,7 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        OwnerDashboardDetailScreen(ownerId: userId),
+                    builder: (_) => OwnerDashboardDetailScreen(ownerId: userId),
                   ),
                 );
               }
@@ -162,14 +170,17 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
             icon: Icons.restaurant_menu,
             title: '메뉴 관리',
             subtitle: '메뉴 등록, 수정, 숨김/노출',
-            onTap: (_myRestaurant != null &&
-                    appState.currentProfile?.id != null)
+            onTap:
+                (_myRestaurant != null && appState.currentProfile?.id != null)
                 ? () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => MenuManagementScreen(
-                            restaurantId: _myRestaurant!.id,
-                            ownerId: appState.currentProfile!.id)))
+                      builder: (_) => MenuManagementScreen(
+                        restaurantId: _myRestaurant!.id,
+                        ownerId: appState.currentProfile!.id,
+                      ),
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(height: 10),
@@ -182,8 +193,8 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
                     final result = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => OwnerStoreEditScreen(
-                            restaurant: _myRestaurant!),
+                        builder: (_) =>
+                            OwnerStoreEditScreen(restaurant: _myRestaurant!),
                       ),
                     );
                     if (result == true) _load(); // 수정 후 새로고침
@@ -195,8 +206,9 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
             icon: Icons.flag_outlined,
             title: '신고/오류',
             subtitle: '신고된 항목 확인',
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('신고 관리 기능은 준비 중이에요.'))),
+            onTap: () => ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('신고 관리 기능은 준비 중이에요.'))),
           ),
         ],
       ),
@@ -211,56 +223,89 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8),
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-              child: Text(r.name,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  r.name,
                   style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w900))),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-                color: AppColors.orange.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8)),
-            child: const Text('승인됨',
-                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.orange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '승인됨',
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.orange,
-                    fontWeight: FontWeight.w700)),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ]),
-        if (r.address.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Row(children: [
-            const Icon(Icons.location_on_outlined,
-                size: 14, color: AppColors.textGray),
-            const SizedBox(width: 4),
-            Expanded(
-                child: Text(r.address,
+          if (r.address.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: AppColors.textGray,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    r.address,
                     style: const TextStyle(
-                        fontSize: 13, color: AppColors.textGray))),
-          ]),
-        ],
-        if (noCoords) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+                      fontSize: 13,
+                      color: AppColors.textGray,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (noCoords) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
                 color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(8)),
-            child: const Row(children: [
-              Icon(Icons.warning_amber, size: 14, color: Colors.amber),
-              SizedBox(width: 6),
-              Expanded(
-                  child: Text('좌표가 없어 주먹지도에 표시되지 않습니다.\n관리자에게 문의해 주세요.',
-                      style: TextStyle(fontSize: 11))),
-            ]),
-          ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber, size: 14, color: Colors.amber),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '좌표가 없어 주먹지도에 표시되지 않습니다.\n관리자에게 문의해 주세요.',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 
@@ -269,38 +314,49 @@ class _MyStoreTabScreenState extends State<MyStoreTabScreen> {
     required String title,
     required String subtitle,
     VoidCallback? onTap,
-  }) =>
-      InkWell(
-        onTap: onTap,
+  }) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05), blurRadius: 6)
-            ],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.orange),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textGray,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Row(children: [
-            Icon(icon, color: AppColors.orange),
-            const SizedBox(width: 12),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700)),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textGray)),
-                ])),
-            Icon(Icons.chevron_right,
-                color: onTap != null ? AppColors.midGray : AppColors.softGray),
-          ]),
-        ),
-      );
-
+          Icon(
+            Icons.chevron_right,
+            color: onTap != null ? AppColors.midGray : AppColors.softGray,
+          ),
+        ],
+      ),
+    ),
+  );
 }

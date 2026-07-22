@@ -43,7 +43,8 @@ class _FilterScreenState extends State<FilterScreen> {
                     max: 5.0,
                     divisions: 9,
                     onChanged: (v) => setState(
-                        () => _filter = _filter.copyWith(distanceKm: v)),
+                      () => _filter = _filter.copyWith(distanceKm: v),
+                    ),
                   ),
                   const SizedBox(height: 14),
                   FilterSliderCard(
@@ -53,8 +54,9 @@ class _FilterScreenState extends State<FilterScreen> {
                     min: 5000,
                     max: 30000,
                     divisions: 25,
-                    onChanged: (v) => setState(() =>
-                        _filter = _filter.copyWith(maxPrice: v.round())),
+                    onChanged: (v) => setState(
+                      () => _filter = _filter.copyWith(maxPrice: v.round()),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   _sectionLabel('카테고리'),
@@ -69,7 +71,8 @@ class _FilterScreenState extends State<FilterScreen> {
                         selected: selected,
                         onTap: () => setState(() {
                           _filter = _filter.copyWith(
-                              category: c == '전체' ? null : c);
+                            category: c == '전체' ? null : c,
+                          );
                         }),
                       );
                     }).toList(),
@@ -85,36 +88,51 @@ class _FilterScreenState extends State<FilterScreen> {
                         label: '혼밥',
                         icon: Icons.person_outline_rounded,
                         selected: _filter.soloFriendly,
-                        onTap: () => setState(() => _filter = _filter
-                            .copyWith(soloFriendly: !_filter.soloFriendly)),
+                        onTap: () => setState(
+                          () => _filter = _filter.copyWith(
+                            soloFriendly: !_filter.soloFriendly,
+                          ),
+                        ),
                       ),
                       OptionChip(
                         label: '포장',
                         icon: Icons.takeout_dining_outlined,
                         selected: _filter.takeoutAvailable,
-                        onTap: () => setState(() => _filter = _filter.copyWith(
-                            takeoutAvailable: !_filter.takeoutAvailable)),
+                        onTap: () => setState(
+                          () => _filter = _filter.copyWith(
+                            takeoutAvailable: !_filter.takeoutAvailable,
+                          ),
+                        ),
                       ),
                       OptionChip(
                         label: '배달',
                         icon: Icons.delivery_dining_outlined,
                         selected: _filter.deliveryAvailable,
-                        onTap: () => setState(() => _filter = _filter.copyWith(
-                            deliveryAvailable: !_filter.deliveryAvailable)),
+                        onTap: () => setState(
+                          () => _filter = _filter.copyWith(
+                            deliveryAvailable: !_filter.deliveryAvailable,
+                          ),
+                        ),
                       ),
                       OptionChip(
                         label: '비건',
                         icon: Icons.eco_outlined,
                         selected: _filter.veganOption,
-                        onTap: () => setState(() => _filter = _filter
-                            .copyWith(veganOption: !_filter.veganOption)),
+                        onTap: () => setState(
+                          () => _filter = _filter.copyWith(
+                            veganOption: !_filter.veganOption,
+                          ),
+                        ),
                       ),
                       OptionChip(
                         label: '최근 제외',
                         icon: Icons.history_rounded,
                         selected: _filter.excludeRecent,
-                        onTap: () => setState(() => _filter = _filter
-                            .copyWith(excludeRecent: !_filter.excludeRecent)),
+                        onTap: () => setState(
+                          () => _filter = _filter.copyWith(
+                            excludeRecent: !_filter.excludeRecent,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -139,11 +157,11 @@ class _FilterScreenState extends State<FilterScreen> {
   }
 
   Widget _sectionLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: AppColors.darkInk,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+      color: AppColors.darkInk,
+    ),
+  );
 }

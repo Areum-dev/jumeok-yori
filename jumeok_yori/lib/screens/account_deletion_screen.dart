@@ -16,12 +16,7 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
   String? _reason;
   bool _loading = false;
 
-  static const _reasons = [
-    '서비스 불만족',
-    '개인정보 우려',
-    '이용 빈도 낮음',
-    '기타',
-  ];
+  static const _reasons = ['서비스 불만족', '개인정보 우려', '이용 빈도 낮음', '기타'];
 
   Future<void> _delete() async {
     if (!_confirmed) return;
@@ -67,9 +62,9 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
     setState(() => _loading = false);
 
     // 탈퇴 완료 메시지 표시 후 auth 화면으로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('회원탈퇴가 완료되었습니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('회원탈퇴가 완료되었습니다.')));
     Navigator.pushNamedAndRemoveUntil(context, '/auth', (_) => false);
   }
 
@@ -97,16 +92,18 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppColors.softGray, width: 1),
+                        border: Border.all(color: AppColors.softGray, width: 1),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: const [
-                              Icon(Icons.warning_amber_rounded,
-                                  color: AppColors.orange, size: 20),
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                color: AppColors.orange,
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 '탈퇴 전 꼭 확인하세요',
@@ -199,8 +196,7 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
                                     : null,
                               ),
                               const SizedBox(width: 12),
-                              Text(r,
-                                  style: const TextStyle(fontSize: 14)),
+                              Text(r, style: const TextStyle(fontSize: 14)),
                             ],
                           ),
                         ),
@@ -211,8 +207,7 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
 
                     // 확인 체크박스
                     InkWell(
-                      onTap: () =>
-                          setState(() => _confirmed = !_confirmed),
+                      onTap: () => setState(() => _confirmed = !_confirmed),
                       borderRadius: BorderRadius.circular(8),
                       child: Row(
                         children: [
@@ -268,7 +263,9 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
                       : const Text(
                           '회원탈퇴',
                           style: TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w700),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                 ),
               ),
@@ -311,13 +308,15 @@ class _InfoSection extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('• ',
-                    style: TextStyle(fontSize: 13, color: color)),
+                Text('• ', style: TextStyle(fontSize: 13, color: color)),
                 Expanded(
                   child: Text(
                     item,
-                    style:
-                        const TextStyle(fontSize: 13, color: AppColors.darkInk, height: 1.4),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.darkInk,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],

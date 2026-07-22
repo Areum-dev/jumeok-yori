@@ -11,11 +11,7 @@ class KakaoLoginButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
 
-  const KakaoLoginButton({
-    super.key,
-    this.onPressed,
-    this.isLoading = false,
-  });
+  const KakaoLoginButton({super.key, this.onPressed, this.isLoading = false});
 
   static const _kakaoYellow = Color(0xFFFEE500);
   static const _kakaoText = Color(0xFF191919);

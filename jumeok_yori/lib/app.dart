@@ -39,8 +39,9 @@ class JumeokYoriApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AppState(
-            menuRepository:
-                useReal ? SupabaseMenuRepository() : MockDataRepository(),
+            menuRepository: useReal
+                ? SupabaseMenuRepository()
+                : MockDataRepository(),
             restaurantRepository: useReal
                 ? SupabaseRestaurantRepository()
                 : MockRestaurantRepository(),
@@ -74,17 +75,17 @@ class JumeokYoriApp extends StatelessWidget {
           '/inquiry': (_) => const InquiryScreen(),
           '/account-deletion': (_) => const AccountDeletionScreen(),
           '/legal/terms': (_) => const LegalDocumentScreen(
-                title: '서비스 이용약관',
-                assetPath: 'lib/legal/terms.md',
-              ),
+            title: '서비스 이용약관',
+            assetPath: 'lib/legal/terms.md',
+          ),
           '/legal/privacy': (_) => const LegalDocumentScreen(
-                title: '개인정보처리방침',
-                assetPath: 'lib/legal/privacy.md',
-              ),
+            title: '개인정보처리방침',
+            assetPath: 'lib/legal/privacy.md',
+          ),
           '/legal/location': (_) => const LegalDocumentScreen(
-                title: '위치정보 이용약관',
-                assetPath: 'lib/legal/location-policy.md',
-              ),
+            title: '위치정보 이용약관',
+            assetPath: 'lib/legal/location-policy.md',
+          ),
         },
       ),
     );

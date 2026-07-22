@@ -3,11 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// .env 파일에서 환경변수를 읽는 헬퍼
 /// 키가 없거나 비어 있으면 빈 문자열 반환
 class Env {
-  static String get supabaseUrl =>
-      dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
 
-  static String get supabaseAnonKey =>
-      dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   // USE_SUPABASE=true 일 때만 실제 Supabase 사용
   static bool get useSupabase {

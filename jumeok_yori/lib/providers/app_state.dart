@@ -156,13 +156,17 @@ class AppState extends ChangeNotifier {
     userLat = pos.lat;
     userLng = pos.lng;
     isDefaultLocation = pos.isDefault;
-    locationLabel = pos.isDefault ? '${AppConfig.defaultLocationLabel} (기본)' : '현재 위치';
+    locationLabel = pos.isDefault
+        ? '${AppConfig.defaultLocationLabel} (기본)'
+        : '현재 위치';
     notifyListeners();
   }
 
   // ── 필터 ──────────────────────────────────────────────────
-  RecommendationFilter filter =
-      const RecommendationFilter(distanceKm: 2.0, maxPrice: 15000);
+  RecommendationFilter filter = const RecommendationFilter(
+    distanceKm: 2.0,
+    maxPrice: 15000,
+  );
 
   Future<void> updateFilter(RecommendationFilter newFilter) async {
     filter = newFilter;
@@ -285,8 +289,12 @@ class AppState extends ChangeNotifier {
     for (final id in regIds) {
       final m = registeredMenus.where((x) => x.id == id).firstOrNull;
       if (m != null) {
-        savedItems.add(RecommendationResult.registered(m,
-            distanceM: (m.restaurant?.distanceKm ?? 0) * 1000));
+        savedItems.add(
+          RecommendationResult.registered(
+            m,
+            distanceM: (m.restaurant?.distanceKm ?? 0) * 1000,
+          ),
+        );
       }
     }
     for (final id in starterIds) {
@@ -303,8 +311,7 @@ class AppState extends ChangeNotifier {
   Future<bool> toggleSave(RecommendationResult r) async {
     if (!isLoggedIn) return true;
     if (r.id == null) return false;
-    await LocalUserService.toggleSaved(
-        isRegistered: r.isRegistered, id: r.id!);
+    await LocalUserService.toggleSaved(isRegistered: r.isRegistered, id: r.id!);
     if (isSaved(r)) {
       savedItems.removeWhere((x) => x.type == r.type && x.id == r.id);
     } else {

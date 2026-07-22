@@ -37,11 +37,12 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        // 2026-07-22: Google Play 정책 대응 - Android 16(API 36) 이상 타겟팅 필수.
+        targetSdk = 36
         // 2026-07-20: 카카오 로그인 추가 + 지도 UI 개선 업데이트.
-        // pubspec.yaml(1.1.0+4)의 빌드 번호와 동일하게 동기화.
+        // pubspec.yaml(1.1.0+5)의 빌드 번호와 동일하게 동기화.
         // 신규 기능 추가라 versionName 도 1.0.0 -> 1.1.0 으로 올림.
-        versionCode = 4
+        versionCode = 5
         versionName = "1.1.0"
     }
 

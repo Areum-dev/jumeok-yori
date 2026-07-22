@@ -39,10 +39,9 @@ android {
         minSdk = flutter.minSdkVersion
         // 2026-07-22: Google Play 정책 대응 - Android 16(API 36) 이상 타겟팅 필수.
         targetSdk = 36
-        // 2026-07-20: 카카오 로그인 추가 + 지도 UI 개선 업데이트.
-        // pubspec.yaml(1.1.0+5)의 빌드 번호와 동일하게 동기화.
-        // 신규 기능 추가라 versionName 도 1.0.0 -> 1.1.0 으로 올림.
-        versionCode = 5
+        // 2026-07-22: 카카오 로그인 KOE205 수정 반영.
+        // pubspec.yaml(1.1.0+6)의 빌드 번호와 동일하게 동기화.
+        versionCode = 6
         versionName = "1.1.0"
     }
 

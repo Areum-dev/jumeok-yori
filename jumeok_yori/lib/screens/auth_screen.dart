@@ -41,14 +41,64 @@ class _AuthScreenState extends State<AuthScreen> {
   // 동시에 _afterLogin 을 호출해 화면 이동이 중복 발생하지 않도록 방지.
   bool _navigatedAfterLogin = false;
 
+  // 카카오 버튼을 누른 뒤 실제로 카카오 identity 가 생긴 signedIn 이벤트만
+  // "카카오 로그인 성공"으로 인정하기 위한 상태. 흰 화면을 닫고 돌아왔을 때
+  // 기존에 남아있던 이메일 세션(또는 스트림이 재전달하는 과거 세션)을
+  // 새 카카오 로그인 성공으로 착각해 홈으로 이동시키지 않기 위함이다.
+  bool _kakaoLoginPending = false;
+  String? _userIdBeforeKakaoLogin;
+
+  /// signedIn 이벤트의 세션이 실제 카카오 로그인 결과인지 판별한다.
+  /// identities 목록에 provider == 'kakao' 가 있거나, app_metadata 의
+  /// provider/providers 가 kakao 를 가리키면 카카오 로그인으로 간주한다.
+  bool _isKakaoSession(Session? session) {
+    final user = session?.user;
+    if (user == null) return false;
+    final hasKakaoIdentity =
+        user.identities?.any((i) => i.provider == 'kakao') ?? false;
+    if (hasKakaoIdentity) return true;
+    final metaProvider = user.appMetadata['provider'];
+    if (metaProvider == 'kakao') return true;
+    final metaProviders = user.appMetadata['providers'];
+    if (metaProviders is List && metaProviders.contains('kakao')) return true;
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
     _authStateSub = _authRepo.authStateChanges.listen(
       (state) {
-        if (state.event == AuthChangeEvent.signedIn) {
+        if (state.event != AuthChangeEvent.signedIn) return;
+        if (_kakaoLoginPending) {
+          // 카카오 로그인 진행 중에 받은 signedIn 이벤트: 실제로 카카오
+          // identity 가 생긴 세션인지 확인한 경우에만 성공으로 처리한다.
+          // (user id 가 로그인 시작 전과 같은지는 참고 로그로만 남긴다 -
+          // Supabase 가 기존 이메일 계정에 카카오 identity 를 자동으로
+          // 연결하는 케이스에서는 id 가 그대로일 수 있으므로, id 변경
+          // 여부를 성공/실패 판정의 필수 조건으로 삼지 않는다.)
+          final isKakao = _isKakaoSession(state.session);
+          final newUserId = state.session?.user.id;
+          if (!isKakao) {
+            debugPrint(
+              '[AUTH] 카카오 로그인 대기 중 signedIn 이벤트를 받았지만 kakao '
+              'identity 가 없어 무시함 (before=$_userIdBeforeKakaoLogin, '
+              'event user=$newUserId) - 기존 세션을 카카오 성공으로 오인하지 않음',
+            );
+            return;
+          }
+          debugPrint(
+            '[AUTH] 카카오 로그인 성공 확인 (before=$_userIdBeforeKakaoLogin, '
+            'after=$newUserId)',
+          );
+          _kakaoLoginPending = false;
+          _userIdBeforeKakaoLogin = null;
           _afterLogin();
+          return;
         }
+        // 카카오 로그인 대기 중이 아닌 signedIn 은 이메일 로그인 직접 흐름과
+        // 겹쳐서 오는 경우다. _afterLogin 자체가 중복 호출을 막아준다.
+        _afterLogin();
       },
       // 카카오 로그인 후 앱으로 복귀하는 딥링크 처리 중 세션 교환이 실패하면
       // (예: redirect 오류, 네트워크 오류) supabase_flutter 가 이 스트림에
@@ -147,23 +197,33 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _signInWithKakao() async {
     if (_kakaoLoading || _loading) return; // 중복 클릭 방지
+    // 기존 이메일 세션이 있어도 여기서 signOut 하지 않는다. 대신 로그인
+    // 시작 전 사용자 id 를 기록해두고, 이후 signedIn 이벤트가 실제로
+    // "새로운" 카카오 사용자로 바뀐 것인지 판별하는 데 참고용으로 남긴다.
+    _userIdBeforeKakaoLogin = Supabase.instance.client.auth.currentUser?.id;
     setState(() {
       _kakaoLoading = true;
+      _kakaoLoginPending = true;
       _error = null;
     });
     try {
       // signInWithOAuth 는 "카카오 로그인 페이지를 여는 데 성공했는지"만 반환한다.
       // 실제 로그인 완료는 initState 에서 구독한 authStateChanges 스트림이
-      // signedIn 이벤트를 받으면 _afterLogin 이 알아서 호출된다.
+      // signedIn 이벤트를 받고, 그 세션이 실제 카카오 identity 를 가질 때만
+      // _afterLogin 이 호출된다 (_isKakaoSession 참고).
       final launched = await _authRepo.signInWithKakao();
       if (!launched && mounted) {
+        _kakaoLoginPending = false;
         setState(() => _error = '카카오 로그인 화면을 열지 못했어요. 다시 시도해 주세요.');
       }
     } catch (e) {
+      _kakaoLoginPending = false;
       if (mounted) setState(() => _error = _mapError(e));
     } finally {
       // 브라우저로 전환된 뒤에는 로딩 표시를 계속 띄워둘 필요가 없다
       // (사용자가 로그인을 취소하고 앱으로 돌아와도 화면이 멈춰있지 않도록).
+      // _kakaoLoginPending 은 여기서 끄지 않는다 - 브라우저가 열린 뒤에도
+      // 실제 로그인 결과(딥링크 복귀)는 비동기로 나중에 도착하기 때문이다.
       if (mounted) setState(() => _kakaoLoading = false);
     }
   }

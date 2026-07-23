@@ -73,6 +73,15 @@ class AuthService {
   /// account_email 을 실제로 제거하려면 Supabase Dashboard 의 Kakao Provider
   /// 설정에서 scope 값을 직접 고쳐야 하며, 앱 코드에서는 scopes 를 아예
   /// 넘기지 않는 것이 가장 안전합니다(중복 append 도 함께 방지됨).
+  /// 인증 화면을 항상 외부 브라우저(iOS: Safari / SFAuthenticationSession,
+  /// Android: Chrome Custom Tab)로 강제 실행합니다. 기본값인
+  /// LaunchMode.platformDefault 를 iOS 에서 그대로 두면 앱 내장 웹뷰로
+  /// 열리는데, 이 내장 웹뷰가 카카오 로그인 페이지를 제대로 로드하지 못하고
+  /// 흰 화면만 남는 문제가 있었습니다(구글 로그인은 Android 한정으로 SDK가
+  /// 내부적으로 이미 externalApplication 을 강제하고 있는데, 카카오는 그런
+  /// 예외 처리가 없어 iOS 에서 기본값을 그대로 씁니다). Android 는 기존에도
+  /// 정상 작동했고 externalApplication 으로 바꿔도 동작 방식은 동일(외부
+  /// 브라우저로 열림)하므로 플랫폼 분기 없이 공통 적용합니다.
   Future<bool> signInWithKakao() async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
@@ -80,6 +89,7 @@ class AuthService {
       return await client.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: kakaoRedirectTo,
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
     } on AuthException catch (e) {
       throw _koreanError(e.message);

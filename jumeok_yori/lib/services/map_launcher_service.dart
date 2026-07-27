@@ -20,6 +20,13 @@ class MapLauncherService {
     return true;
   }
 
+  /// 지도 검색어 생성 공통 함수. 앞뒤 공백과 중복 공백을 제거해 반환한다.
+  /// "내 주변", "맛집", "포장" 같은 접두/접미 문자열은 여기서 절대 붙이지
+  /// 않는다 - 순수하게 음식명(또는 가게명)만 검색어로 사용해야 한다.
+  static String _cleanQuery(String raw) {
+    return raw.trim().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
   /// 길찾기 진입점. 기존 openNaverDirectionsOrSearch 를 대체합니다.
   static Future<void> openDirections({
     String? restaurantName,
@@ -30,7 +37,14 @@ class MapLauncherService {
     required String recommendationType, // 'registered' or 'starter'
     BuildContext? context,
   }) async {
-    final displayName = restaurantName ?? menuName;
+    final cleanMenuName = _cleanQuery(menuName);
+    final cleanRestaurantName = restaurantName == null
+        ? null
+        : _cleanQuery(restaurantName);
+    final displayName =
+        (cleanRestaurantName != null && cleanRestaurantName.isNotEmpty)
+        ? cleanRestaurantName
+        : cleanMenuName;
     final hasCoords = _hasValidCoords(lat, lng);
 
     // iOS 에서는 반드시 Apple 지도 / 네이버 지도 중 선택하게 함 (App Review 요구사항).
@@ -57,8 +71,8 @@ class MapLauncherService {
     if (context != null && !context.mounted) return;
 
     await _openNaverOrFallback(
-      restaurantName: restaurantName,
-      menuName: menuName,
+      restaurantName: cleanRestaurantName,
+      menuName: cleanMenuName,
       address: address,
       lat: hasCoords ? lat : null,
       lng: hasCoords ? lng : null,
@@ -147,27 +161,39 @@ class MapLauncherService {
     final candidates = <String>[];
 
     if (recommendationType == 'registered') {
-      final name = restaurantName ?? menuName;
+      // 등록된 가게 추천/상세: 음식명이 아니라 "그 가게"를 찾는 것이므로
+      // 가게명(+주소)으로 검색한다. 가게명이 없으면 음식명으로 대체.
+      final name = (restaurantName != null && restaurantName.isNotEmpty)
+          ? restaurantName
+          : menuName;
       if (lat != null && lng != null) {
         candidates.add(
           'nmap://place?lat=$lat&lng=$lng&name=${Uri.encodeComponent(name)}&appname=com.jumeok.yori',
         );
       }
-      final query = restaurantName ?? '$menuName ${address ?? ''}'.trim();
-      candidates.add(
-        'https://map.naver.com/v5/search/${Uri.encodeComponent(query)}',
-      );
-      candidates.add(
-        'https://www.google.com/maps/search/${Uri.encodeComponent(query)}',
-      );
+      final query = (restaurantName != null && restaurantName.isNotEmpty)
+          ? restaurantName
+          : _cleanQuery('$menuName ${address ?? ''}');
+      if (query.isNotEmpty) {
+        candidates.add(
+          'https://map.naver.com/v5/search/${Uri.encodeComponent(query)}',
+        );
+        candidates.add(
+          'https://www.google.com/maps/search/${Uri.encodeComponent(query)}',
+        );
+      }
     } else {
-      // starter: 가게명 없이 "내 주변 + 메뉴" 검색
-      candidates.add(
-        'https://map.naver.com/v5/search/${Uri.encodeComponent('내 주변 $menuName')}',
-      );
-      candidates.add(
-        'https://www.google.com/maps/search/${Uri.encodeComponent('$menuName 맛집')}',
-      );
+      // starter(특정 가게가 매칭되지 않은 기본 추천 메뉴): 가게가 없으므로
+      // 순수하게 음식명만 검색한다. "내 주변", "맛집" 같은 접두/접미 문자열을
+      // 붙이면 실제 메뉴명과 다른 검색어가 되어버리므로 절대 추가하지 않는다.
+      if (menuName.isNotEmpty) {
+        candidates.add(
+          'https://map.naver.com/v5/search/${Uri.encodeComponent(menuName)}',
+        );
+        candidates.add(
+          'https://www.google.com/maps/search/${Uri.encodeComponent(menuName)}',
+        );
+      }
     }
 
     for (final url in candidates) {

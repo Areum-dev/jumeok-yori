@@ -189,8 +189,8 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     final appState = context.read<AppState>();
+    // refreshProfile 내부에서 저장한 메뉴/추천 기록도 함께 다시 불러온다.
     await appState.refreshProfile();
-    await appState.loadSaved();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/home');
   }

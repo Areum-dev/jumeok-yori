@@ -39,9 +39,9 @@ class _FilterScreenState extends State<FilterScreen> {
                     label: '거리',
                     valueText: '${_filter.distanceLabel} 이내',
                     value: _filter.distanceKm,
-                    min: 0.5,
-                    max: 5.0,
-                    divisions: 9,
+                    min: RecommendationFilter.minDistanceKm,
+                    max: RecommendationFilter.maxDistanceKm,
+                    divisions: 19, // 0.5km 단위
                     onChanged: (v) => setState(
                       () => _filter = _filter.copyWith(distanceKm: v),
                     ),
@@ -51,9 +51,9 @@ class _FilterScreenState extends State<FilterScreen> {
                     label: '최대 가격',
                     valueText: _filter.priceLabel,
                     value: _filter.maxPrice.toDouble(),
-                    min: 5000,
-                    max: 30000,
-                    divisions: 25,
+                    min: RecommendationFilter.minPrice.toDouble(),
+                    max: RecommendationFilter.maxPriceLimit.toDouble(),
+                    divisions: 19, // 5,000원 단위
                     onChanged: (v) => setState(
                       () => _filter = _filter.copyWith(maxPrice: v.round()),
                     ),

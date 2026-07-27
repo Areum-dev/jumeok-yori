@@ -32,7 +32,9 @@ class RecommendationService {
       if (dist > filter.distanceKm) return false;
 
       if (item.price > filter.maxPrice) return false;
-      if (cat != null && item.category != cat) return false;
+      if (cat != null && !CategoryMatcher.matches(item.category, cat)) {
+        return false;
+      }
       if (filter.soloFriendly && !item.isSoloFriendly) return false;
       if (filter.takeoutAvailable && !item.isTakeoutAvailable) return false;
       if (filter.deliveryAvailable && !item.isDeliveryAvailable) return false;
@@ -46,7 +48,9 @@ class RecommendationService {
       // 예상 최저가가 maxPrice 이하인 것만
       final minP = m.expectedMinPrice ?? 0;
       if (minP > filter.maxPrice) return false;
-      if (cat != null && m.category != cat) return false;
+      if (cat != null && !CategoryMatcher.matches(m.category, cat)) {
+        return false;
+      }
       if (filter.soloFriendly && !m.isSoloFriendly) return false;
       if (filter.takeoutAvailable && !m.isTakeoutFriendly) return false;
       if (filter.deliveryAvailable && !m.isDeliveryFriendly) return false;

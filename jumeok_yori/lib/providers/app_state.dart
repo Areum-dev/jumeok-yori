@@ -13,6 +13,8 @@ import '../models/owner_store_application.dart';
 import '../repositories/menu_repository.dart';
 import '../repositories/restaurant_repository.dart';
 import '../repositories/auth_repository.dart';
+import '../repositories/saved_menu_repository.dart';
+import '../repositories/recommendation_history_repository.dart';
 import '../services/recommendation_service.dart';
 import '../services/location_service.dart';
 import '../services/local_user_service.dart';
@@ -23,6 +25,9 @@ class AppState extends ChangeNotifier {
   final RestaurantRepository restaurantRepository;
   final AuthRepository authRepository;
   final bool isSupabaseMode;
+  final SavedMenuRepository _savedMenuRepository = SavedMenuRepository();
+  final RecommendationHistoryRepository _historyRepository =
+      RecommendationHistoryRepository();
 
   AppState({
     required this.menuRepository,
@@ -124,10 +129,16 @@ class AppState extends ChangeNotifier {
     // 로그인/계정 전환 시 이전 세션(게스트 또는 다른 계정)의 추천 기록이
     // 새 사용자에게 이어져 보이지 않도록 세션 추천 상태를 초기화
     history.clear();
+    savedItems.clear();
+    persistentHistory.clear();
     currentRecommendation = null;
     currentProfile = await authRepository.fetchProfile();
     notifyListeners();
     await loadMyStoreInfo();
+    // 로그인 계정의 저장 메뉴/추천 기록을 서버에서 다시 불러온다
+    // (registeredMenus/starterMenus 는 loadData() 에서 이미 채워져 있어야 함).
+    await loadSaved();
+    await loadHistory();
   }
 
   Future<void> signOut() async {
@@ -138,6 +149,7 @@ class AppState extends ChangeNotifier {
     _myStoreApplicationStatus = null;
     _myRestaurantId = null;
     savedItems.clear();
+    persistentHistory.clear();
     // 추천 기록은 세션 메모리에만 존재하므로 로그아웃 시 반드시 비워
     // 다음 로그인 사용자에게 이전 사용자의 추천 기록이 노출되는 것을 방지
     history.clear();
@@ -280,26 +292,59 @@ class AppState extends ChangeNotifier {
   }
 
   // ── 저장 ──────────────────────────────────────────────────
+  // Supabase 모드 + 로그인 상태에서는 saved_menu_items 테이블이 실제 저장소다
+  // (기기 로컬 저장이 아니라 계정에 연결됨 - 다른 기기/재설치에서도 유지되고,
+  // 계정이 다르면 서로 다른 목록이 보인다). Mock 모드(로그인 개념이 약한 개발용
+  // 데모)에서는 기존처럼 기기 로컬(SharedPreferences)을 사용한다.
   final List<RecommendationResult> savedItems = [];
+  bool savedLoading = false;
+  bool _saveToggleInFlight = false;
 
   Future<void> loadSaved() async {
     savedItems.clear();
-    final regIds = await LocalUserService.getSavedRegisteredIds();
-    final starterIds = await LocalUserService.getSavedStarterIds();
-    for (final id in regIds) {
-      final m = registeredMenus.where((x) => x.id == id).firstOrNull;
-      if (m != null) {
-        savedItems.add(
-          RecommendationResult.registered(
-            m,
-            distanceM: (m.restaurant?.distanceKm ?? 0) * 1000,
-          ),
-        );
+    final userId = currentProfile?.id;
+    if (isSupabaseMode && userId != null) {
+      savedLoading = true;
+      notifyListeners();
+      try {
+        final rows = await _savedMenuRepository.fetchSaved(userId);
+        for (final row in rows) {
+          final result = _matchSavedOrHistoryRow(
+            type: row.recommendationType,
+            menuItemId: row.menuItemId,
+            starterMenuId: row.starterMenuId,
+            recordedAt: row.createdAt,
+            recordId: row.id,
+          );
+          if (result != null) savedItems.add(result);
+        }
+      } catch (e) {
+        debugPrint('저장한 메뉴 불러오기 실패: $e');
+      } finally {
+        savedLoading = false;
       }
+      notifyListeners();
+      return;
     }
-    for (final id in starterIds) {
-      final m = starterMenus.where((x) => x.id == id).firstOrNull;
-      if (m != null) savedItems.add(RecommendationResult.starter(m));
+    // Mock 모드 / 비로그인: 기존 로컬 저장 방식 유지 (개발 편의용).
+    if (!isSupabaseMode) {
+      final regIds = await LocalUserService.getSavedRegisteredIds();
+      final starterIds = await LocalUserService.getSavedStarterIds();
+      for (final id in regIds) {
+        final m = registeredMenus.where((x) => x.id == id).firstOrNull;
+        if (m != null) {
+          savedItems.add(
+            RecommendationResult.registered(
+              m,
+              distanceM: (m.restaurant?.distanceKm ?? 0) * 1000,
+            ),
+          );
+        }
+      }
+      for (final id in starterIds) {
+        final m = starterMenus.where((x) => x.id == id).firstOrNull;
+        if (m != null) savedItems.add(RecommendationResult.starter(m));
+      }
     }
     notifyListeners();
   }
@@ -311,14 +356,192 @@ class AppState extends ChangeNotifier {
   Future<bool> toggleSave(RecommendationResult r) async {
     if (!isLoggedIn) return true;
     if (r.id == null) return false;
-    await LocalUserService.toggleSaved(isRegistered: r.isRegistered, id: r.id!);
-    if (isSaved(r)) {
-      savedItems.removeWhere((x) => x.type == r.type && x.id == r.id);
-    } else {
-      savedItems.insert(0, r);
+    if (_saveToggleInFlight) return false; // 중복 탭 방지
+    _saveToggleInFlight = true;
+    try {
+      final userId = currentProfile?.id;
+      if (isSupabaseMode && userId != null) {
+        final existing = savedItems
+            .where((x) => x.type == r.type && x.id == r.id)
+            .firstOrNull;
+        if (existing != null) {
+          // 이미 저장돼 있으면 취소. recordId 가 없으면(방어적으로) DB 재조회.
+          final rowId =
+              existing.recordId ??
+              await _savedMenuRepository.findExisting(
+                userId: userId,
+                isRegistered: r.isRegistered,
+                id: r.id!,
+              );
+          if (rowId != null) await _savedMenuRepository.deleteSaved(rowId);
+          savedItems.removeWhere((x) => x.type == r.type && x.id == r.id);
+        } else {
+          // 동시 탭 등으로 이미 DB 에 있을 수 있으니 한 번 더 확인 후 저장
+          // (동일 메뉴 중복 저장 방지).
+          final dupRowId = await _savedMenuRepository.findExisting(
+            userId: userId,
+            isRegistered: r.isRegistered,
+            id: r.id!,
+          );
+          final rowId =
+              dupRowId ??
+              (await _savedMenuRepository.insertSaved(
+                userId: userId,
+                isRegistered: r.isRegistered,
+                id: r.id!,
+              )).id;
+          savedItems.insert(
+            0,
+            _withRecord(r, recordId: rowId, recordedAt: DateTime.now()),
+          );
+        }
+      } else {
+        // Mock 모드 fallback
+        await LocalUserService.toggleSaved(
+          isRegistered: r.isRegistered,
+          id: r.id!,
+        );
+        if (isSaved(r)) {
+          savedItems.removeWhere((x) => x.type == r.type && x.id == r.id);
+        } else {
+          savedItems.insert(0, r);
+        }
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint('저장 처리 실패: $e');
+      rethrow;
+    } finally {
+      _saveToggleInFlight = false;
+    }
+  }
+
+  Future<void> deleteSavedItem(RecommendationResult r) async {
+    if (r.recordId == null) return;
+    try {
+      await _savedMenuRepository.deleteSaved(r.recordId!);
+      savedItems.removeWhere((x) => x.recordId == r.recordId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('저장 삭제 실패: $e');
+      rethrow;
+    }
+  }
+
+  // ── 추천 기록 (마이페이지, 영구 저장) ─────────────────────────
+  // `history` 는 홈 화면의 "최근 추천"용 세션 메모리 목록(즉시 반응, 로그인
+  // 여부 무관)이고, `persistentHistory` 는 마이페이지에서 보여주는 계정별
+  // 영구 기록이다(recommendation_logs 를 실제로 읽어온다).
+  final List<RecommendationResult> persistentHistory = [];
+  bool historyLoading = false;
+
+  Future<void> loadHistory() async {
+    final userId = currentProfile?.id;
+    if (!isSupabaseMode || userId == null) {
+      persistentHistory.clear();
+      notifyListeners();
+      return;
+    }
+    historyLoading = true;
+    notifyListeners();
+    try {
+      final rows = await _historyRepository.fetchHistory(userId);
+      persistentHistory.clear();
+      for (final row in rows) {
+        final result = _matchSavedOrHistoryRow(
+          type: row.recommendationType,
+          menuItemId: row.menuItemId,
+          starterMenuId: row.starterMenuId,
+          recordedAt: row.createdAt,
+          recordId: row.id,
+        );
+        if (result != null) persistentHistory.add(result);
+      }
+    } catch (e) {
+      debugPrint('추천 기록 불러오기 실패: $e');
+    } finally {
+      historyLoading = false;
     }
     notifyListeners();
-    return false;
+  }
+
+  Future<void> deleteHistoryEntry(RecommendationResult r) async {
+    if (r.recordId == null) return;
+    try {
+      await _historyRepository.deleteEntry(r.recordId!);
+      persistentHistory.removeWhere((x) => x.recordId == r.recordId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('추천 기록 삭제 실패: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> clearAllHistory() async {
+    final userId = currentProfile?.id;
+    if (userId == null) return;
+    try {
+      await _historyRepository.deleteAll(userId);
+      persistentHistory.clear();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('추천 기록 전체 삭제 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// saved_menu_items / recommendation_logs 행(참조 id 만 있음)을 이미 불러온
+  /// registeredMenus/starterMenus 와 매칭해 화면에 표시 가능한
+  /// RecommendationResult 로 변환한다. 참조된 메뉴가 삭제되었거나 더 이상
+  /// 승인 상태가 아니면(목록에 없으면) null 을 반환해 조용히 건너뛴다.
+  RecommendationResult? _matchSavedOrHistoryRow({
+    required String type,
+    String? menuItemId,
+    String? starterMenuId,
+    required DateTime recordedAt,
+    required String recordId,
+  }) {
+    if (type == 'registered' && menuItemId != null) {
+      final m = registeredMenus.where((x) => x.id == menuItemId).firstOrNull;
+      if (m == null) return null;
+      return RecommendationResult.registered(
+        m,
+        distanceM: (m.restaurant?.distanceKm ?? 0) * 1000,
+        recordedAt: recordedAt,
+        recordId: recordId,
+      );
+    }
+    if (type == 'starter' && starterMenuId != null) {
+      final m = starterMenus.where((x) => x.id == starterMenuId).firstOrNull;
+      if (m == null) return null;
+      return RecommendationResult.starter(
+        m,
+        recordedAt: recordedAt,
+        recordId: recordId,
+      );
+    }
+    return null;
+  }
+
+  RecommendationResult _withRecord(
+    RecommendationResult r, {
+    required String recordId,
+    required DateTime recordedAt,
+  }) {
+    if (r.isRegistered && r.menuItem != null) {
+      return RecommendationResult.registered(
+        r.menuItem!,
+        distanceM: r.distanceM,
+        recordId: recordId,
+        recordedAt: recordedAt,
+      );
+    }
+    return RecommendationResult.starter(
+      r.starterMenu!,
+      recordId: recordId,
+      recordedAt: recordedAt,
+    );
   }
 
   // ── 사장님 신청 ───────────────────────────────────────────

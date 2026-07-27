@@ -24,9 +24,27 @@ class FilterStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cat = prefs.getString('${_prefix}category');
+      // 예전 버전에서 저장된 값이 현재 필터의 최대/최소 범위를 벗어나면
+      // (예: 거리 상한이 10km로, 가격 상한이 100,000원으로 바뀌기 전 저장값)
+      // 슬라이더 value 가 min/max 범위를 벗어나 assertion 오류가 나지 않도록
+      // 안전하게 보정한다.
+      final rawDistance = prefs.getDouble('${_prefix}distanceKm') ?? 2.0;
+      final rawPrice = prefs.getInt('${_prefix}maxPrice') ?? 15000;
+      final distanceKm = rawDistance
+          .clamp(
+            RecommendationFilter.minDistanceKm,
+            RecommendationFilter.maxDistanceKm,
+          )
+          .toDouble();
+      final maxPrice = rawPrice
+          .clamp(
+            RecommendationFilter.minPrice,
+            RecommendationFilter.maxPriceLimit,
+          )
+          .toInt();
       return RecommendationFilter(
-        distanceKm: prefs.getDouble('${_prefix}distanceKm') ?? 2.0,
-        maxPrice: prefs.getInt('${_prefix}maxPrice') ?? 15000,
+        distanceKm: distanceKm,
+        maxPrice: maxPrice,
         category: (cat == null || cat == '전체') ? null : cat,
         soloFriendly: prefs.getBool('${_prefix}soloFriendly') ?? false,
         takeoutAvailable: prefs.getBool('${_prefix}takeoutAvailable') ?? false,

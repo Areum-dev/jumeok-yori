@@ -150,3 +150,13 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+-- 2026-07: 마이페이지 "추천 기록" 삭제 기능을 위해 recommendation_logs 에
+-- DELETE RLS 정책 추가 (본인 행만 삭제 가능). saved_menu_items 는 이미
+-- FOR ALL 정책이 있어 select/insert/delete 를 모두 지원하므로 변경 불필요.
+-- 기존 SELECT/INSERT 정책과 기존 행은 전혀 건드리지 않음.
+-- ============================================================
+DROP POLICY IF EXISTS reclog_delete_own ON public.recommendation_logs;
+CREATE POLICY reclog_delete_own ON public.recommendation_logs
+  FOR DELETE USING (user_id = auth.uid() OR public.is_admin());

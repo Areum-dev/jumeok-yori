@@ -47,12 +47,22 @@ class _MainTabScreenState extends State<MainTabScreen> {
     ];
 
     final safeIdx = _idx.clamp(0, screens.length - 1);
+    final myPageIndex = screens.length - 1; // 마이페이지는 항상 마지막 탭
 
     return Scaffold(
       body: IndexedStack(index: safeIdx, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIdx,
-        onTap: (i) => setState(() => _idx = i),
+        onTap: (i) {
+          setState(() => _idx = i);
+          // IndexedStack 은 탭을 바꿔도 위젯을 다시 만들지 않아 initState 가
+          // 재실행되지 않으므로, 마이페이지 탭으로 들어올 때마다 여기서
+          // 명시적으로 최신 데이터를 다시 불러온다.
+          if (i == myPageIndex && appState.isLoggedIn) {
+            appState.loadSaved();
+            appState.loadHistory();
+          }
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.orange,
         unselectedItemColor: AppColors.midGray,

@@ -247,6 +247,11 @@ CREATE POLICY reclog_insert ON public.recommendation_logs
 DROP POLICY IF EXISTS reclog_select_own ON public.recommendation_logs;
 CREATE POLICY reclog_select_own ON public.recommendation_logs
   FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
+-- 2026-07: 마이페이지 추천 기록 삭제 기능을 위해 DELETE 정책 추가
+-- (본인 행만 삭제 가능, 기존 SELECT/INSERT 정책은 그대로 유지)
+DROP POLICY IF EXISTS reclog_delete_own ON public.recommendation_logs;
+CREATE POLICY reclog_delete_own ON public.recommendation_logs
+  FOR DELETE USING (user_id = auth.uid() OR public.is_admin());
 
 -- ── saved_menu_items ──
 DROP POLICY IF EXISTS saved_all_own ON public.saved_menu_items;

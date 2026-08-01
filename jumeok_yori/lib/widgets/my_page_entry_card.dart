@@ -9,6 +9,7 @@ class MyPageEntryCard extends StatelessWidget {
   final RecommendationResult result;
   final VoidCallback? onTap;
   final VoidCallback? onMap;
+  final VoidCallback? onShare;
   final VoidCallback? onDelete;
 
   const MyPageEntryCard({
@@ -16,6 +17,7 @@ class MyPageEntryCard extends StatelessWidget {
     required this.result,
     this.onTap,
     this.onMap,
+    this.onShare,
     this.onDelete,
   });
 
@@ -78,7 +80,7 @@ class MyPageEntryCard extends StatelessWidget {
                   children: [
                     Text(
                       result.menuName,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 16,
@@ -123,6 +125,16 @@ class MyPageEntryCard extends StatelessWidget {
                         color: AppColors.textGray,
                       ),
                       tooltip: '지도에서 보기',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  if (onShare != null)
+                    IconButton(
+                      onPressed: onShare,
+                      icon: const Icon(
+                        Icons.share_outlined,
+                        color: AppColors.textGray,
+                      ),
+                      tooltip: '공유',
                       visualDensity: VisualDensity.compact,
                     ),
                   if (onDelete != null)

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/recommendation_result.dart';
 import '../providers/app_state.dart';
 import '../services/map_launcher_service.dart';
+import '../services/share_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/logo_widget.dart';
@@ -220,47 +221,56 @@ class _MyPageScreenState extends State<MyPageScreen> {
       );
     }
 
+    // iPad/태블릿처럼 화면이 넓을 때 카드가 지나치게 옆으로 늘어나지 않도록
+    // 목록 폭에 상한을 두고 가운데 정렬한다. 일반 휴대전화 폭에서는
+    // maxWidth 가 화면보다 넓어 아무 영향이 없다.
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView.separated(
-        padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding),
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (_, i) {
-          final r = items[i];
-          return MyPageEntryCard(
-            result: r,
-            onTap: () {
-              context.read<AppState>().currentRecommendation = r;
-              Navigator.pushNamed(context, '/result');
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView.separated(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (_, i) {
+              final r = items[i];
+              return MyPageEntryCard(
+                result: r,
+                onTap: () {
+                  context.read<AppState>().currentRecommendation = r;
+                  Navigator.pushNamed(context, '/result');
+                },
+                onMap: () => MapLauncherService.openDirections(
+                  restaurantName: r.restaurant?.name,
+                  menuName: r.menuName,
+                  address: r.restaurant?.address,
+                  lat: r.restaurant?.lat,
+                  lng: r.restaurant?.lng,
+                  recommendationType: r.type,
+                  context: context,
+                ),
+                onShare: () => ShareService.shareRecommendation(context, r),
+                onDelete: () async {
+                  try {
+                    await onDelete(r);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(deletedSnackText)));
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('삭제하지 못했어요. 다시 시도해 주세요.')),
+                      );
+                    }
+                  }
+                },
+              );
             },
-            onMap: () => MapLauncherService.openDirections(
-              restaurantName: r.restaurant?.name,
-              menuName: r.menuName,
-              address: r.restaurant?.address,
-              lat: r.restaurant?.lat,
-              lng: r.restaurant?.lng,
-              recommendationType: r.type,
-              context: context,
-            ),
-            onDelete: () async {
-              try {
-                await onDelete(r);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(deletedSnackText)));
-                }
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('삭제하지 못했어요. 다시 시도해 주세요.')),
-                  );
-                }
-              }
-            },
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -311,11 +321,17 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          profile?.displayName ?? '게스트',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                        // 이름이 길거나 시스템 글자 크기를 키운 상태에서
+                        // 배지들과 함께 Row 폭을 넘지 않도록 Flexible 로 감싼다.
+                        Flexible(
+                          child: Text(
+                            profile?.displayName ?? '게스트',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),

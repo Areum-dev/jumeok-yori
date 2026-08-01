@@ -43,33 +43,32 @@ class _MyPageScreenState extends State<MyPageScreen> {
       length: 2,
       child: Scaffold(
         backgroundColor: AppColors.ivory,
-        appBar: AppBar(
-          title: const Text('마이페이지'),
-          bottom: const TabBar(
-            labelColor: AppColors.orange,
-            unselectedLabelColor: AppColors.textGray,
-            indicatorColor: AppColors.orange,
-            indicatorWeight: 3,
-            labelStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            tabs: [
-              Tab(text: '저장한 메뉴'),
-              Tab(text: '추천 기록'),
-            ],
-          ),
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              _profileHeader(context, state),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _savedTab(context, state),
-                    _historyTab(context, state),
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            const SliverAppBar(pinned: true, title: Text('마이페이지')),
+            SliverToBoxAdapter(child: _profileHeader(context, state)),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _TabBarHeaderDelegate(
+                const TabBar(
+                  labelColor: AppColors.orange,
+                  unselectedLabelColor: AppColors.textGray,
+                  indicatorColor: AppColors.orange,
+                  indicatorWeight: 3,
+                  labelStyle: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  tabs: [
+                    Tab(text: '저장한 메뉴'),
+                    Tab(text: '추천 기록'),
                   ],
                 ),
               ),
-            ],
+            ),
+          ],
+          body: TabBarView(
+            children: [_savedTab(context, state), _historyTab(context, state)],
           ),
         ),
       ),
@@ -82,12 +81,19 @@ class _MyPageScreenState extends State<MyPageScreen> {
       return _loginPrompt(context, '저장한 메뉴를 보려면 로그인이 필요해요.');
     }
     if (state.savedLoading && state.savedItems.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return _scrollableLoading();
+    }
+    if (state.savedLoadError != null && state.savedItems.isEmpty) {
+      return _loadError(
+        context,
+        state.savedLoadError!,
+        () => context.read<AppState>().loadSaved(),
+      );
     }
     return _entryList(
       context,
       items: state.savedItems,
-      emptyMsg: '저장한 메뉴가 없어요.',
+      emptyMsg: '아직 저장한 메뉴가 없어요.\n추천 결과에서 저장 버튼을 누르면 여기에 표시돼요.',
       onRefresh: () => context.read<AppState>().loadSaved(),
       onDelete: (r) => context.read<AppState>().deleteSavedItem(r),
       deletedSnackText: '저장을 취소했어요.',
@@ -100,7 +106,14 @@ class _MyPageScreenState extends State<MyPageScreen> {
       return _loginPrompt(context, '추천 기록을 보려면 로그인이 필요해요.');
     }
     if (state.historyLoading && state.persistentHistory.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return _scrollableLoading();
+    }
+    if (state.historyLoadError != null && state.persistentHistory.isEmpty) {
+      return _loadError(
+        context,
+        state.historyLoadError!,
+        () => context.read<AppState>().loadHistory(),
+      );
     }
     return Column(
       children: [
@@ -127,7 +140,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
           child: _entryList(
             context,
             items: state.persistentHistory,
-            emptyMsg: '추천 기록이 없어요.',
+            emptyMsg: '아직 추천 기록이 없어요.\n메뉴를 추천받으면 여기에 기록돼요.',
             onRefresh: () => context.read<AppState>().loadHistory(),
             onDelete: (r) => context.read<AppState>().deleteHistoryEntry(r),
             deletedSnackText: '기록을 삭제했어요.',
@@ -167,11 +180,11 @@ class _MyPageScreenState extends State<MyPageScreen> {
     }
   }
 
-  Widget _loginPrompt(BuildContext context, String message) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+  Widget _loginPrompt(BuildContext context, String message) => ListView(
+    padding: const EdgeInsets.all(32),
+    children: [
+      const SizedBox(height: 80),
+      Column(
         children: [
           const Icon(
             Icons.lock_outline_rounded,
@@ -191,7 +204,33 @@ class _MyPageScreenState extends State<MyPageScreen> {
           ),
         ],
       ),
-    ),
+    ],
+  );
+
+  Widget _scrollableLoading() => ListView(
+    children: const [
+      SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
+    ],
+  );
+
+  Widget _loadError(
+    BuildContext context,
+    String message,
+    Future<void> Function() retry,
+  ) => ListView(
+    padding: const EdgeInsets.all(32),
+    children: [
+      const SizedBox(height: 60),
+      Column(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.midGray),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          OutlinedButton(onPressed: retry, child: const Text('다시 시도')),
+        ],
+      ),
+    ],
   );
 
   Widget _entryList(
@@ -476,4 +515,26 @@ class _MyPageScreenState extends State<MyPageScreen> {
       style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
     ),
   );
+}
+
+class _TabBarHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  const _TabBarHeaderDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => Material(color: AppColors.ivory, child: tabBar);
+
+  @override
+  bool shouldRebuild(covariant _TabBarHeaderDelegate oldDelegate) => false;
 }

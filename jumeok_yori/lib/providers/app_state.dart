@@ -131,6 +131,8 @@ class AppState extends ChangeNotifier {
     history.clear();
     savedItems.clear();
     persistentHistory.clear();
+    savedLoadError = null;
+    historyLoadError = null;
     currentRecommendation = null;
     currentProfile = await authRepository.fetchProfile();
     notifyListeners();
@@ -150,6 +152,8 @@ class AppState extends ChangeNotifier {
     _myRestaurantId = null;
     savedItems.clear();
     persistentHistory.clear();
+    savedLoadError = null;
+    historyLoadError = null;
     // 추천 기록은 세션 메모리에만 존재하므로 로그아웃 시 반드시 비워
     // 다음 로그인 사용자에게 이전 사용자의 추천 기록이 노출되는 것을 방지
     history.clear();
@@ -264,17 +268,35 @@ class AppState extends ChangeNotifier {
     try {
       if (!isSupabaseMode) return;
       final client = Supabase.instance.client;
-      await client.from('recommendation_logs').insert({
-        'user_id': currentProfile?.id,
-        'anonymous_user_id': anonymousUserId,
-        'recommendation_type': result.isRegistered ? 'registered' : 'starter',
-        'menu_item_id': result.menuItem?.id,
-        'starter_menu_id': result.starterMenu?.id,
-        'restaurant_id': result.restaurant?.id,
-        'filters_json': filter.toJson(),
-        'user_lat': userLat,
-        'user_lng': userLng,
-      });
+      final userId = currentProfile?.id;
+      final row = await client
+          .from('recommendation_logs')
+          .insert({
+            'user_id': userId,
+            'anonymous_user_id': anonymousUserId,
+            'recommendation_type': result.isRegistered
+                ? 'registered'
+                : 'starter',
+            'menu_item_id': result.menuItem?.id,
+            'starter_menu_id': result.starterMenu?.id,
+            'restaurant_id': result.restaurant?.id,
+            'filters_json': filter.toJson(),
+            'user_lat': userLat,
+            'user_lng': userLng,
+          })
+          .select('id, created_at')
+          .single();
+      if (userId != null) {
+        persistentHistory.insert(
+          0,
+          _withRecord(
+            result,
+            recordId: row['id'] as String,
+            recordedAt: DateTime.parse(row['created_at'] as String),
+          ),
+        );
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('추천 기록 저장 실패: $e');
     }
@@ -298,16 +320,18 @@ class AppState extends ChangeNotifier {
   // 데모)에서는 기존처럼 기기 로컬(SharedPreferences)을 사용한다.
   final List<RecommendationResult> savedItems = [];
   bool savedLoading = false;
+  String? savedLoadError;
   bool _saveToggleInFlight = false;
 
   Future<void> loadSaved() async {
-    savedItems.clear();
     final userId = currentProfile?.id;
     if (isSupabaseMode && userId != null) {
       savedLoading = true;
+      savedLoadError = null;
       notifyListeners();
       try {
         final rows = await _savedMenuRepository.fetchSaved(userId);
+        final loadedItems = <RecommendationResult>[];
         for (final row in rows) {
           final result = _matchSavedOrHistoryRow(
             type: row.recommendationType,
@@ -316,10 +340,14 @@ class AppState extends ChangeNotifier {
             recordedAt: row.createdAt,
             recordId: row.id,
           );
-          if (result != null) savedItems.add(result);
+          if (result != null) loadedItems.add(result);
         }
+        savedItems
+          ..clear()
+          ..addAll(loadedItems);
       } catch (e) {
         debugPrint('저장한 메뉴 불러오기 실패: $e');
+        savedLoadError = '저장한 메뉴를 불러오지 못했어요.\n잠시 후 다시 시도해 주세요.';
       } finally {
         savedLoading = false;
       }
@@ -345,6 +373,9 @@ class AppState extends ChangeNotifier {
         final m = starterMenus.where((x) => x.id == id).firstOrNull;
         if (m != null) savedItems.add(RecommendationResult.starter(m));
       }
+    } else {
+      savedItems.clear();
+      savedLoadError = null;
     }
     notifyListeners();
   }
@@ -435,19 +466,22 @@ class AppState extends ChangeNotifier {
   // 영구 기록이다(recommendation_logs 를 실제로 읽어온다).
   final List<RecommendationResult> persistentHistory = [];
   bool historyLoading = false;
+  String? historyLoadError;
 
   Future<void> loadHistory() async {
     final userId = currentProfile?.id;
     if (!isSupabaseMode || userId == null) {
       persistentHistory.clear();
+      historyLoadError = null;
       notifyListeners();
       return;
     }
     historyLoading = true;
+    historyLoadError = null;
     notifyListeners();
     try {
       final rows = await _historyRepository.fetchHistory(userId);
-      persistentHistory.clear();
+      final loadedHistory = <RecommendationResult>[];
       for (final row in rows) {
         final result = _matchSavedOrHistoryRow(
           type: row.recommendationType,
@@ -456,10 +490,14 @@ class AppState extends ChangeNotifier {
           recordedAt: row.createdAt,
           recordId: row.id,
         );
-        if (result != null) persistentHistory.add(result);
+        if (result != null) loadedHistory.add(result);
       }
+      persistentHistory
+        ..clear()
+        ..addAll(loadedHistory);
     } catch (e) {
       debugPrint('추천 기록 불러오기 실패: $e');
+      historyLoadError = '추천 기록을 불러오지 못했어요.\n잠시 후 다시 시도해 주세요.';
     } finally {
       historyLoading = false;
     }

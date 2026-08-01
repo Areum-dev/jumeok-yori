@@ -30,12 +30,21 @@
 	<string>주변 음식점을 추천하기 위해 현재 위치를 사용합니다.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>주변 음식점을 추천하기 위해 위치 정보를 사용합니다.</string>
+	<!-- 2026-08: 사진/동영상 권한 최소화 검토.
+	     메뉴/가게 사진 선택은 image_picker 의 pickImage(source: gallery) 하나뿐이고,
+	     내부적으로 PHPickerViewController(iOS 14+)를 사용해 사용자가 고른 사진만
+	     앱에 전달되며 전체 라이브러리 접근 권한이 필요 없다. 다만 image_picker_ios
+	     플러그인이 구버전 iOS 대비 PHPhotoLibrary API 를 코드 경로상 참조하고 있어,
+	     이 설명 문자열 자체를 완전히 지우면 해당 API 호출 시 크래시할 위험이 있으므로
+	     NSPhotoLibraryUsageDescription 은 안전장치로 유지한다. 카메라 촬영 기능은
+	     앱에 없지만(ImageSource.camera 미사용) 미사용 설명 문자열은 무해하므로 유지.
+	     반면 NSPhotoLibraryAddUsageDescription(사진 "저장")은 앱이 사용자 라이브러리에
+	     이미지를 저장하는 기능이 전혀 없어(카메라 촬영/저장 코드 없음, grep으로 확인)
+	     실제로 쓰이지 않는 권한 설명이라 제거함. -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>가게 사진 등록을 위해 사진 라이브러리에 접근합니다.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>가게 사진 촬영을 위해 카메라를 사용합니다.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>촬영한 가게 사진을 저장하기 위해 사진 라이브러리에 접근합니다.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>nmap</string>

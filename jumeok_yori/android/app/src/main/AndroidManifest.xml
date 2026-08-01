@@ -1,9 +1,31 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- 2026-08: Google Play "사진 및 동영상에 대체 시스템 선택 도구 사용" 정책 위반 수정.
+         메뉴/가게 사진 선택은 image_picker 의 ImagePicker.pickImage(source: gallery) 하나로만
+         구현되어 있고, 이는 이미 Android 시스템 Photo Picker(ACTION_PICK_IMAGES)를 사용해
+         광범위한 저장소 읽기 권한이 필요 없다. 아래 권한들은 어떤 플러그인도 요구하지 않는데
+         앱 자체 Manifest 에 직접(수동으로) 선언되어 있었던 것이 정책 위반의 실제 원인이었다.
+         READ_MEDIA_IMAGES/READ_EXTERNAL_STORAGE 는 직접 선언을 삭제하는 것만으로 충분하지만
+         (다른 플러그인이 재병합하지 않음을 grep 으로 확인함), 향후 의존성이 추가돼도 실수로
+         재도입되지 않도록 tools:node="remove" 로 최종 merged manifest 에서 이중으로 차단한다. -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:node="remove" />
     <application
         android:label="주먹요리"
         android:name="${applicationName}"

@@ -131,14 +131,14 @@ class AuthService {
         // (account_email scope 미요청) 빈 문자열이 되지 않도록 처리한다.
         // (my_page_screen 등에서 displayName.characters.first 를 쓰는데
         // 빈 문자열이면 예외가 발생한다.)
-        final email = user.email;
+        final email = resolveDisplayEmail(user);
         final meta = user.userMetadata;
         final metaNickname = _metaString(meta, [
           'full_name',
           'name',
           'nickname',
         ]);
-        return Profile(
+        final fallback = Profile(
           id: user.id,
           email: email ?? '',
           displayName:
@@ -150,8 +150,36 @@ class AuthService {
           role: _roleFromEmail(email),
           createdAt: DateTime.now(),
         );
+        // 신규 사용자의 프로필만 생성한다. insert를 사용하고 충돌 시
+        // 아무 값도 갱신하지 않으므로 기존 role/이름/가게 관계를 덮어쓰지 않는다.
+        try {
+          await client.from('profiles').insert({
+            'id': user.id,
+            'email': email,
+            'display_name': fallback.displayName,
+            'avatar_url': fallback.avatarUrl,
+          });
+          final created = await client
+              .from('profiles')
+              .select()
+              .eq('id', user.id)
+              .maybeSingle();
+          if (created != null) return Profile.fromJson(created);
+        } catch (_) {
+          // DB 트리거와 동시에 생성된 경우 또는 RLS로 fallback insert가
+          // 거절된 경우에도 정상 세션을 실패 처리하지 않는다.
+        }
+        return fallback;
       }
-      final profile = Profile.fromJson(res);
+      var profile = Profile.fromJson(res);
+      final displayEmail = resolveDisplayEmail(
+        user,
+        profileEmail: profile.email,
+      );
+      if (profile.email.isEmpty && displayEmail != null) {
+        // 표시용 fallback만 메모리에 반영한다. DB의 기존 profile은 갱신하지 않는다.
+        profile = profile.copyWith(email: displayEmail);
+      }
       // 관리자 이메일이면 role 보정 (DB role 우선)
       if (profile.role != 'admin' && profile.email == AppConfig.adminEmail) {
         return profile.copyWith(role: 'admin');
@@ -164,6 +192,44 @@ class AuthService {
 
   String _roleFromEmail(String? email) =>
       email == AppConfig.adminEmail ? 'admin' : 'user';
+
+  /// 화면 표시용 이메일 후보를 찾는다. 로그인 성공 여부나 사용자 식별에는
+  /// 사용하지 않으며, 어떤 후보도 없으면 null을 그대로 반환한다.
+  static String? resolveDisplayEmail(User user, {String? profileEmail}) {
+    String? identityEmail;
+    for (final identity in user.identities ?? const []) {
+      if (identity.provider != 'kakao') continue;
+      identityEmail = _nonEmpty(identity.identityData?['email']);
+      if (identityEmail != null) break;
+    }
+    return resolveDisplayEmailCandidates(
+      authEmail: user.email,
+      metadataEmail: user.userMetadata?['email'],
+      identityEmail: identityEmail,
+      profileEmail: profileEmail,
+    );
+  }
+
+  static String? resolveDisplayEmailCandidates({
+    Object? authEmail,
+    Object? metadataEmail,
+    Object? identityEmail,
+    Object? profileEmail,
+  }) {
+    final resolvedAuthEmail = _nonEmpty(authEmail);
+    if (resolvedAuthEmail != null) return resolvedAuthEmail;
+    final resolvedMetadataEmail = _nonEmpty(metadataEmail);
+    if (resolvedMetadataEmail != null) return resolvedMetadataEmail;
+    final resolvedIdentityEmail = _nonEmpty(identityEmail);
+    if (resolvedIdentityEmail != null) return resolvedIdentityEmail;
+    return _nonEmpty(profileEmail);
+  }
+
+  static String? _nonEmpty(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 
   /// OAuth 프로바이더가 넘겨준 user_metadata 에서 후보 키를 순서대로 찾아
   /// 첫 번째로 존재하는 비어있지 않은 문자열을 반환합니다. 없으면 null.

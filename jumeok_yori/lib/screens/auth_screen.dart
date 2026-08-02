@@ -162,32 +162,6 @@ class _AuthScreenState extends State<AuthScreen> {
     _navigatedAfterLogin = true;
     if (!mounted) return;
 
-    // 카카오 계정이 이메일 제공에 동의하지 않은 경우 user.email 이 없을 수 있다.
-    // 가짜 이메일을 만들거나 기존 계정과 임의로 연결하지 않고, 그대로 진행하되
-    // 사용자에게 한 번 안내만 한다 (Supabase의 "Allow users without an email"
-    // 설정이 켜져 있다는 전제 — 꺼져 있다면애초에 이 경로까지 오지 못하고
-    // Supabase 쪽에서 계정 생성 자체가 실패함).
-    final currentEmail = Supabase.instance.client.auth.currentUser?.email;
-    if (currentEmail == null || currentEmail.isEmpty) {
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('이메일 정보 없음'),
-          content: const Text(
-            '카카오 계정에 이메일 제공 동의가 없어 이메일 없이 로그인됐어요.\n'
-            '비밀번호 재설정 등 이메일이 필요한 기능은 사용할 수 없어요.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-    }
-
     final appState = context.read<AppState>();
     // refreshProfile 내부에서 저장한 메뉴/추천 기록도 함께 다시 불러온다.
     await appState.refreshProfile();

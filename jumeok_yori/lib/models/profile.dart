@@ -38,13 +38,17 @@ class Profile {
     'created_at': createdAt.toIso8601String(),
   };
 
-  Profile copyWith({String? displayName, String? avatarUrl, String? role}) =>
-      Profile(
-        id: id,
-        email: email,
-        displayName: displayName ?? this.displayName,
-        avatarUrl: avatarUrl ?? this.avatarUrl,
-        role: role ?? this.role,
-        createdAt: createdAt,
-      );
+  Profile copyWith({
+    String? email,
+    String? displayName,
+    String? avatarUrl,
+    String? role,
+  }) => Profile(
+    id: id,
+    email: email ?? this.email,
+    displayName: displayName ?? this.displayName,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+    role: role ?? this.role,
+    createdAt: createdAt,
+  );
 }

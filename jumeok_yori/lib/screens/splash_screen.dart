@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
@@ -65,48 +66,51 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.darkInk,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: ScaleTransition(
-            scale: _scaleAnim,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const LogoWidget(size: 100, showText: false),
-                const SizedBox(height: 28),
-                const Text(
-                  '주먹요리',
-                  style: TextStyle(
-                    color: AppColors.ivory,
-                    fontSize: 38,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '주는대로 먹는 요리',
-                  style: TextStyle(
-                    color: AppColors.ivory.withValues(alpha: 0.55),
-                    fontSize: 15,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 60),
-                SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation(
-                      AppColors.orange.withValues(alpha: 0.7),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: AppColors.darkInk,
+        body: Center(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: ScaleTransition(
+              scale: _scaleAnim,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const LogoWidget(size: 100, showText: false),
+                  const SizedBox(height: 28),
+                  const Text(
+                    '주먹요리',
+                    style: TextStyle(
+                      color: AppColors.ivory,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '주는대로 먹는 요리',
+                    style: TextStyle(
+                      color: AppColors.ivory.withValues(alpha: 0.55),
+                      fontSize: 15,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation(
+                        AppColors.orange.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

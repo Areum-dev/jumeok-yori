@@ -386,7 +386,11 @@ class _MyPageScreenState extends State<MyPageScreen> {
                       ],
                     ),
                     Text(
-                      profile?.email ?? '로그인하지 않음',
+                      profile == null
+                          ? '로그인하지 않음'
+                          : profile.email.trim().isEmpty
+                          ? '이메일 미등록'
+                          : profile.email,
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.textGray,

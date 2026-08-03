@@ -37,8 +37,8 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        // 이번 릴리스 요구사항: Android 15(API 35) 타겟 및 edge-to-edge 대응.
-        targetSdk = 35
+        // Google Play 2026-08-31 정책 대응: Android 16(API 36) 이상 타겟.
+        targetSdk = 36
         // 2026-07-23: 버전을 여러 파일에 하드코딩해 동기화를 깜빡하는 실수를
         // 반복하지 않도록, Flutter 표준 템플릿과 동일하게 pubspec.yaml 의
         // version 값을 그대로 따라가도록 변경 (flutter.versionCode/versionName

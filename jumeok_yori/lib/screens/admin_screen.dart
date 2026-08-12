@@ -316,6 +316,51 @@ class _ReportsTabState extends State<_ReportsTab> {
     }
   }
 
+  Future<void> _suspendRestaurant(Map<String, dynamic> report) async {
+    final restaurantId = report['restaurant_id'] as String?;
+    final restaurant = report['restaurants'] as Map<String, dynamic>?;
+    if (restaurantId == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('가게를 지도에서 삭제할까요?'),
+        content: Text(
+          '${restaurant?['name'] ?? '이 가게'}를 주먹지도와 추천에서 즉시 숨깁니다.\n'
+          '계정과 기존 가게·메뉴 데이터는 삭제하지 않고 보존됩니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('지도에서 삭제'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _repo.suspendReportedRestaurant(
+        reportId: report['id'] as String,
+        restaurantId: restaurantId,
+      );
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('가게를 지도와 추천에서 삭제했습니다.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('가게 처리에 실패했습니다. 권한을 확인해주세요.')),
+        );
+      }
+    }
+  }
+
   String _statusLabel(String? s) {
     switch (s) {
       case 'reviewed':
@@ -347,6 +392,9 @@ class _ReportsTabState extends State<_ReportsTab> {
         itemBuilder: (_, i) {
           final r = _reports[i];
           final status = r['status'] as String?;
+          final restaurant = r['restaurants'] as Map<String, dynamic>?;
+          final restaurantSuspended =
+              restaurant?['display_status'] == 'suspended';
           return Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -388,6 +436,34 @@ class _ReportsTabState extends State<_ReportsTab> {
                     ),
                   ),
                 ],
+                if (restaurant != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.softGray,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${restaurant['name'] ?? '가게명 없음'}',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        if (restaurant['address'] != null)
+                          Text(
+                            '${restaurant['address']}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textGray,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   '유형: ${r['recommendation_type'] ?? '-'}',
@@ -397,7 +473,9 @@ class _ReportsTabState extends State<_ReportsTab> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 2,
                   children: [
                     if (status != 'reviewed')
                       TextButton(
@@ -410,6 +488,26 @@ class _ReportsTabState extends State<_ReportsTab> {
                         child: const Text(
                           '처리완료',
                           style: TextStyle(color: AppColors.orange),
+                        ),
+                      ),
+                    if (r['restaurant_id'] != null && !restaurantSuspended)
+                      TextButton.icon(
+                        onPressed: () => _suspendRestaurant(r),
+                        icon: const Icon(Icons.store_mall_directory_outlined),
+                        label: const Text('지도에서 삭제'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red.shade700,
+                        ),
+                      ),
+                    if (restaurantSuspended)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          '지도 삭제됨',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textGray,
+                          ),
                         ),
                       ),
                   ],

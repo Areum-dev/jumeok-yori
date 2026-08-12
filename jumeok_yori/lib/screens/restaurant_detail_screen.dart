@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/restaurant.dart';
 import '../models/menu_item.dart';
 import '../repositories/map_repository.dart';
@@ -144,6 +145,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 context,
                 restaurantId: r.id,
                 recommendationType: 'registered',
+                userId: Supabase.instance.client.auth.currentUser?.id,
               ),
             ),
           ),

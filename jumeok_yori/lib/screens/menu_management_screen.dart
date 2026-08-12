@@ -100,22 +100,28 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     }
   }
 
-  void _showAddMenuDialog() {
+  void _showMenuSheet([MenuItem? menu]) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _AddMenuSheet(
+      builder: (_) => _MenuFormSheet(
         restaurantId: widget.restaurantId,
         ownerId: widget.ownerId,
-        onMenuAdded: () {
+        menu: menu,
+        onSaved: () {
           _load();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('메뉴가 등록됐어요.\n이제 주먹요리 뽑기와 내 가게 페이지에 노출됩니다.'),
+              SnackBar(
+                content: Text(
+                  menu == null
+                      ? '메뉴가 등록됐어요.\n이제 주먹요리 뽑기와 내 가게 페이지에 노출됩니다.'
+                      : '메뉴가 수정됐어요.',
+                ),
               ),
             );
           }
@@ -137,7 +143,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddMenuDialog,
+        onPressed: _showMenuSheet,
         backgroundColor: AppColors.orange,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('메뉴 추가', style: TextStyle(color: Colors.white)),
@@ -193,6 +199,19 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       ),
       child: Row(
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: m.imageUrl != null && m.imageUrl!.isNotEmpty
+                ? Image.network(
+                    m.imageUrl!,
+                    width: 76,
+                    height: 76,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => _imagePlaceholder(),
+                  )
+                : _imagePlaceholder(),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,6 +235,19 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (m.description != null && m.description!.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      m.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textGray,
+                      ),
+                    ),
+                  ),
                 Text(
                   '${_fmtPrice(m.price)}원',
                   style: TextStyle(
@@ -229,10 +261,12 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (v) {
+              if (v == 'edit') _showMenuSheet(m);
               if (v == 'toggle_display') _toggleDisplay(m);
               if (v == 'toggle_available') _toggleAvailable(m);
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('수정')),
               PopupMenuItem(
                 value: 'toggle_display',
                 child: Text(isHidden ? '다시 노출' : '숨기기'),
@@ -247,6 +281,13 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       ),
     );
   }
+
+  Widget _imagePlaceholder() => Container(
+    width: 76,
+    height: 76,
+    color: AppColors.softGray,
+    child: const Icon(Icons.restaurant_menu, color: AppColors.midGray),
+  );
 
   Widget _tag(String text, Color color) => Container(
     margin: const EdgeInsets.only(left: 6),
@@ -272,20 +313,22 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
   }
 }
 
-class _AddMenuSheet extends StatefulWidget {
+class _MenuFormSheet extends StatefulWidget {
   final String restaurantId;
   final String ownerId;
-  final VoidCallback onMenuAdded;
-  const _AddMenuSheet({
+  final MenuItem? menu;
+  final VoidCallback onSaved;
+  const _MenuFormSheet({
     required this.restaurantId,
     required this.ownerId,
-    required this.onMenuAdded,
+    this.menu,
+    required this.onSaved,
   });
   @override
-  State<_AddMenuSheet> createState() => _AddMenuSheetState();
+  State<_MenuFormSheet> createState() => _MenuFormSheetState();
 }
 
-class _AddMenuSheetState extends State<_AddMenuSheet> {
+class _MenuFormSheetState extends State<_MenuFormSheet> {
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -295,6 +338,21 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
   bool _uploadingImage = false;
   bool _showUrlFallback = false;
   bool _saving = false;
+
+  bool get _isEditing => widget.menu != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final menu = widget.menu;
+    if (menu != null) {
+      _nameCtrl.text = menu.name;
+      _priceCtrl.text = menu.price.toString();
+      _descCtrl.text = menu.description ?? '';
+      _urlCtrl.text = menu.imageUrl ?? '';
+      _uploadedImageUrl = menu.imageUrl;
+    }
+  }
 
   SupabaseClient? get _client {
     try {
@@ -377,7 +435,7 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
     try {
       final client = _client;
       if (client == null) throw Exception('no client');
-      await client.from('menu_items').insert({
+      final values = <String, dynamic>{
         'restaurant_id': widget.restaurantId,
         'owner_id': widget.ownerId,
         'name': _nameCtrl.text.trim(),
@@ -386,19 +444,32 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
             ? _descCtrl.text.trim()
             : null,
         'image_url': ?imageUrl,
-        'approval_status': 'approved',
-        'display_status': 'approved',
-        'is_available': true,
         'source': 'owner_registered',
-      });
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      if (_isEditing) {
+        await client
+            .from('menu_items')
+            .update(values)
+            .eq('id', widget.menu!.id)
+            .eq('restaurant_id', widget.restaurantId)
+            .eq('owner_id', widget.ownerId);
+      } else {
+        values.addAll({
+          'approval_status': 'approved',
+          'display_status': 'approved',
+          'is_available': true,
+        });
+        await client.from('menu_items').insert(values);
+      }
       await AnalyticsService.log(
-        eventType: 'menu_created',
+        eventType: _isEditing ? 'menu_updated' : 'menu_created',
         userId: widget.ownerId,
         restaurantId: widget.restaurantId,
         ownerId: widget.ownerId,
       );
       if (mounted) Navigator.pop(context);
-      widget.onMenuAdded();
+      widget.onSaved();
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
@@ -421,9 +492,9 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '메뉴 추가',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            Text(
+              _isEditing ? '메뉴 수정' : '메뉴 추가',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 16),
             _buildImagePicker(),
@@ -483,8 +554,8 @@ class _AddMenuSheetState extends State<_AddMenuSheet> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
-                        '메뉴 등록하기',
+                    : Text(
+                        _isEditing ? '수정 내용 저장' : '메뉴 등록하기',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

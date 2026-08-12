@@ -132,13 +132,37 @@ class AdminRepository {
   Future<List<Map<String, dynamic>>> fetchReports() async {
     final res = await _client
         .from('reports')
-        .select()
+        .select('*, restaurants(id, name, address, display_status)')
         .order('created_at', ascending: false);
     return (res as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
   Future<void> updateReportStatus(String reportId, String status) async {
     await _client.from('reports').update({'status': status}).eq('id', reportId);
+  }
+
+  /// 신고된 가게를 지도와 추천에서 제거한다. 운영 데이터 보존을 위해 실제 행은
+  /// 삭제하지 않고 가게와 메뉴를 suspended 상태로 전환한다.
+  Future<void> suspendReportedRestaurant({
+    required String reportId,
+    required String restaurantId,
+  }) async {
+    await _client
+        .from('restaurants')
+        .update({
+          'display_status': 'suspended',
+          'verification_status': 'suspended',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', restaurantId);
+    await _client
+        .from('menu_items')
+        .update({
+          'display_status': 'suspended',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('restaurant_id', restaurantId);
+    await updateReportStatus(reportId, 'resolved');
   }
 
   // ── 등록된 가게 ──

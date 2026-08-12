@@ -50,8 +50,15 @@ class ReportDialog extends StatefulWidget {
 class _ReportDialogState extends State<ReportDialog> {
   String? _selected;
   bool _submitting = false;
+  final _detailController = TextEditingController();
 
-  final _reasons = ['가격이 달라요', '사진이 이상해요', '폐업/운영 안 함', '기타'];
+  final _reasons = ['폐업했어요', '해당 위치에 가게가 없어요', '가격이 달라요', '사진이 이상해요', '기타'];
+
+  @override
+  void dispose() {
+    _detailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,18 +67,30 @@ class _ReportDialogState extends State<ReportDialog> {
       content: RadioGroup<String>(
         groupValue: _selected,
         onChanged: (v) => setState(() => _selected = v),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _reasons
-              .map(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ..._reasons.map(
                 (r) => RadioListTile<String>(
                   value: r,
                   title: Text(r, style: const TextStyle(fontSize: 14)),
                   activeColor: AppColors.orange,
                   contentPadding: EdgeInsets.zero,
                 ),
-              )
-              .toList(),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _detailController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: '상세 내용 (선택)',
+                  hintText: '방문 날짜나 확인한 내용을 적어주세요.',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -97,6 +116,9 @@ class _ReportDialogState extends State<ReportDialog> {
     setState(() => _submitting = true);
     await ReportService.submitReport(
       reason: _selected!,
+      detail: _detailController.text.trim().isEmpty
+          ? null
+          : _detailController.text.trim(),
       menuItemId: widget.menuItemId,
       starterMenuId: widget.starterMenuId,
       restaurantId: widget.restaurantId,

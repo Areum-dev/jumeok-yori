@@ -28,8 +28,6 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>주변 음식점을 추천하기 위해 현재 위치를 사용합니다.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>주변 음식점을 추천하기 위해 위치 정보를 사용합니다.</string>
 	<!-- 2026-08: 사진/동영상 권한 최소화 검토.
 	     메뉴/가게 사진 선택은 image_picker 의 pickImage(source: gallery) 하나뿐이고,
 	     내부적으로 PHPickerViewController(iOS 14+)를 사용해 사용자가 고른 사진만

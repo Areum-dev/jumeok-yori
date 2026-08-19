@@ -1,15 +1,14 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-/// .env 파일에서 환경변수를 읽는 헬퍼
-/// 키가 없거나 비어 있으면 빈 문자열 반환
+/// 빌드 시 --dart-define-from-file=.env 로 전달되는 공개 설정만 읽는다.
 class Env {
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+  );
 
   // USE_SUPABASE=true 일 때만 실제 Supabase 사용
   static bool get useSupabase {
-    final val = dotenv.env['USE_SUPABASE']?.toLowerCase() ?? 'false';
+    const val = String.fromEnvironment('USE_SUPABASE', defaultValue: 'false');
     return val == 'true';
   }
 
@@ -21,13 +20,13 @@ class Env {
       !supabaseAnonKey.contains('여기에');
 
   // ── 네이버 지도 / Geocoding (주먹지도) ─────────────────────
-  static String get naverMapClientId => dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
-  static String get naverMapClientIdAndroid =>
-      dotenv.env['NAVER_MAP_CLIENT_ID_ANDROID'] ?? '';
-  static String get naverMapClientIdIos =>
-      dotenv.env['NAVER_MAP_CLIENT_ID_IOS'] ?? '';
-  static String get naverMapClientSecret =>
-      dotenv.env['NAVER_MAP_CLIENT_SECRET'] ?? '';
-  static bool get isNaverGeocodingConfigured =>
-      naverMapClientId.isNotEmpty && naverMapClientSecret.isNotEmpty;
+  static const String naverMapClientId = String.fromEnvironment(
+    'NAVER_MAP_CLIENT_ID',
+  );
+  static const String naverMapClientIdAndroid = String.fromEnvironment(
+    'NAVER_MAP_CLIENT_ID_ANDROID',
+  );
+  static const String naverMapClientIdIos = String.fromEnvironment(
+    'NAVER_MAP_CLIENT_ID_IOS',
+  );
 }

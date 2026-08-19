@@ -10,6 +10,7 @@ Supabase Dashboard → SQL Editor에서 아래 순서대로 실행:
 5. `supabase/migrations_web.sql` — 웹(jumeok-yori-web) 출시를 위한 추가 마이그레이션
    (restaurants.image_url 컬럼, analytics_events 테이블, storage 버킷, starter_menus 추가분).
 6. `supabase/migrations_1_2_6_starter_menus.sql` — 기존 행을 변경하지 않고 가격 없는 음식 종류 100개 추가.
+7. `supabase/migrations_1_2_7_prevent_role_escalation.sql` — 일반 사용자의 profile role 자기 변경 차단(기존 행 변경 없음).
    2026-07-14 기준 REST API 점검 결과 이 항목들이 아직 운영 DB에 적용되지 않아 새로 작성했습니다.
    기존 데이터를 삭제/초기화하지 않는 추가(ADD)/생성(CREATE IF NOT EXISTS) 위주입니다.
 
@@ -80,3 +81,19 @@ flutter analyze
 flutter build appbundle --release
 ```
 빌드 전 서명 키스토어 설정 필요 → RELEASE_CHECKLIST.md 참고
+
+## 8. Naver Geocoding Secret 배포
+
+Naver Client Secret은 Flutter 앱에 넣지 않고 Edge Function secret으로만 관리합니다.
+
+```bash
+supabase secrets set NAVER_MAP_CLIENT_ID=발급값 NAVER_MAP_CLIENT_SECRET=재발급값
+supabase functions deploy geocode-address
+```
+
+기존에 앱에 포함됐던 Client Secret은 Naver Cloud에서 반드시 재발급해야 합니다.
+릴리스는 공개 설정만 전달합니다.
+
+```bash
+flutter build appbundle --release --dart-define-from-file=.env
+```

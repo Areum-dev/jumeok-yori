@@ -45,9 +45,9 @@ class RecommendationService {
     // ── 2. 스타터 메뉴 필터링 (거리 무관) ──
     var starterCandidates = starterMenus.where((m) {
       if (m.displayStatus != 'approved') return false;
-      // 예상 최저가가 maxPrice 이하인 것만
-      final minP = m.expectedMinPrice ?? 0;
-      if (minP > filter.maxPrice) return false;
+      // 스타터(목업) 메뉴는 실제 판매 가게가 생기기 전 음식 종류 아이디어를
+      // 제공하기 위한 데이터다. 음식점마다 가격이 달라지므로 가격/거리 필터를
+      // 적용하지 않고 카테고리와 이용 옵션만 적용한다.
       if (cat != null && !CategoryMatcher.matches(m.category, cat)) {
         return false;
       }

@@ -9,6 +9,7 @@ Supabase Dashboard → SQL Editor에서 아래 순서대로 실행:
 4. `supabase/migrations.sql` — 기존 DB 업데이트 시 (schema.sql 이후 변경사항)
 5. `supabase/migrations_web.sql` — 웹(jumeok-yori-web) 출시를 위한 추가 마이그레이션
    (restaurants.image_url 컬럼, analytics_events 테이블, storage 버킷, starter_menus 추가분).
+6. `supabase/migrations_1_2_6_starter_menus.sql` — 기존 행을 변경하지 않고 가격 없는 음식 종류 100개 추가.
    2026-07-14 기준 REST API 점검 결과 이 항목들이 아직 운영 DB에 적용되지 않아 새로 작성했습니다.
    기존 데이터를 삭제/초기화하지 않는 추가(ADD)/생성(CREATE IF NOT EXISTS) 위주입니다.
 

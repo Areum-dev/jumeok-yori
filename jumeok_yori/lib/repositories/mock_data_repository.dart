@@ -2,6 +2,7 @@ import '../config/app_config.dart';
 import '../models/menu_item.dart';
 import '../models/restaurant.dart';
 import '../models/starter_menu.dart';
+import '../data/additional_starter_menus.dart';
 import 'menu_repository.dart';
 
 /// Supabase 미연결 시 사용하는 로컬 mock 데이터.
@@ -2344,6 +2345,7 @@ class MockDataRepository implements MenuRepository {
       isVeganOption: true,
       searchKeyword: '월남쌈',
     ),
+    ...kAdditionalStarterMenus,
   ];
 
   @override

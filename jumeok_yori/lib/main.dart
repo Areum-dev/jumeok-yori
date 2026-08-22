@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/env.dart';
@@ -20,8 +21,10 @@ Future<void> main() async {
     ),
   );
 
-  // 공개 설정은 --dart-define-from-file=.env 로 주입한다.
-  // 비밀키는 앱에 포함하지 않고 Edge Function secret으로만 관리한다.
+  // 공개 설정만 포함한 asset을 로드한다.
+  // Naver Client Secret은 Edge Function secret으로만 관리한다.
+  await dotenv.load(fileName: 'assets/config.env');
+
   bool supabaseReady = false;
   if (Env.useSupabase && Env.isSupabaseConfigured) {
     try {

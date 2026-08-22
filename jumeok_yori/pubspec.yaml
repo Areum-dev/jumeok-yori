@@ -1,7 +1,7 @@
 name: jumeok_yori
 description: 주는대로 먹는 요리 - 조건만 정하면 메뉴를 골라주는 앱
 publish_to: 'none'
-version: 1.2.7+16
+version: 1.2.8+17
 
 environment:
   sdk: ^3.12.1
@@ -23,6 +23,9 @@ dependencies:
 
   # ── Supabase 연동 ─────────────────────────────────────────
   supabase_flutter: ^2.8.4
+
+  # 앱에 포함 가능한 공개 설정만 로드
+  flutter_dotenv: ^5.2.1
 
   # 위치
   geolocator: ^13.0.2
@@ -53,6 +56,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/config.env
     - assets/images/
     - lib/legal/
 

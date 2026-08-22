@@ -95,5 +95,5 @@ supabase functions deploy geocode-address
 릴리스는 공개 설정만 전달합니다.
 
 ```bash
-flutter build appbundle --release --dart-define-from-file=.env
+flutter build appbundle --release
 ```

@@ -19,6 +19,22 @@ class AuthService {
   Stream<AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
 
+  /// 이메일 인증 메일/비밀번호 재설정 메일의 링크가 최종적으로 돌아올 딥링크.
+  /// 카카오 OAuth 복귀와 동일한 scheme 을 재사용한다 (이미 Android
+  /// intent-filter / iOS CFBundleURLTypes 에 등록돼 있어 추가 네이티브
+  /// 설정이 필요 없고, 카카오 로그인에서 이미 정상 동작이 검증된 값이다).
+  ///
+  /// 이 값을 명시적으로 넘기지 않으면 Supabase 는 Dashboard 의 기본 "Site URL"
+  /// 로 리디렉션하는데, Site URL 이 실제로 서비스되지 않는 주소(예: 예전
+  /// 웹 프로젝트 주소나 localhost)로 설정돼 있으면 메일 링크를 열었을 때
+  /// 404 가 뜬다 (계정 인증 자체는 Supabase 서버에서 이미 처리된 뒤라
+  /// 앱으로 돌아가면 로그인은 돼 있는 것처럼 보이지만, 링크를 연 순간
+  /// 사용자에게는 깨진 것처럼 보인다). Supabase Dashboard 의
+  /// Authentication > URL Configuration > Redirect URLs 허용 목록에
+  /// 이 값이 반드시 포함돼 있어야 실제로 적용된다(카카오 로그인 설정 때
+  /// 이미 등록해뒀다면 별도 조치 불필요).
+  static const appDeepLinkRedirectTo = 'com.jumeokyori.app://login-callback';
+
   Future<void> signUp(
     String email,
     String password, {
@@ -31,6 +47,7 @@ class AuthService {
         email: email.trim(),
         password: password,
         data: displayName != null ? {'display_name': displayName} : null,
+        emailRedirectTo: appDeepLinkRedirectTo,
       );
     } on AuthException catch (e) {
       throw _koreanError(e.message);
@@ -55,14 +72,13 @@ class AuthService {
   }
 
   /// 카카오 로그인 (Supabase OAuth 방식). Kakao Native SDK 를 직접 쓰지 않고
-  /// Supabase 가 카카오 인증 서버로 리디렉션한 뒤, 앱이 [kakaoRedirectTo] 딥링크로
-  /// 복귀하면 supabase_flutter 가 내부적으로 세션을 확립합니다.
+  /// Supabase 가 카카오 인증 서버로 리디렉션한 뒤, 앱이 [appDeepLinkRedirectTo]
+  /// 딥링크로 복귀하면 supabase_flutter 가 내부적으로 세션을 확립합니다.
   ///
   /// 이 메서드가 반환하는 bool 은 "로그인이 완료됐다"는 뜻이 아니라
   /// "카카오 로그인 페이지를 여는 데 성공했다"는 뜻입니다(Supabase SDK 공식 동작).
   /// 실제 로그인 성공 여부는 authStateChanges 스트림의 signedIn 이벤트로 판단해야
   /// 합니다.
-  static const kakaoRedirectTo = 'com.jumeokyori.app://login-callback';
 
   /// scopes 파라미터를 넘기지 않습니다. Supabase 는 클라이언트가 보낸
   /// scopes 를 대체(override)가 아니라 Dashboard(Authentication > Providers >
@@ -88,7 +104,7 @@ class AuthService {
     try {
       return await client.auth.signInWithOAuth(
         OAuthProvider.kakao,
-        redirectTo: kakaoRedirectTo,
+        redirectTo: appDeepLinkRedirectTo,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
     } on AuthException catch (e) {
@@ -98,12 +114,16 @@ class AuthService {
     }
   }
 
-  /// 비밀번호 재설정 메일 전송.
+  /// 비밀번호 재설정 메일 전송. 회원가입 인증 메일과 같은 이유로
+  /// redirectTo 를 명시한다 (Supabase 기본 Site URL 로 빠지면 404 위험).
   Future<void> resetPassword(String email) async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
     try {
-      await client.auth.resetPasswordForEmail(email.trim());
+      await client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: appDeepLinkRedirectTo,
+      );
     } on AuthException catch (e) {
       throw _koreanError(e.message);
     } catch (_) {

@@ -6,6 +6,7 @@ import '../services/map_launcher_service.dart';
 import '../services/share_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/option_chip.dart';
+import '../widgets/redraw_ad_gate.dart';
 import '../widgets/report_dialog.dart';
 
 class RecommendationResultScreen extends StatelessWidget {
@@ -252,7 +253,10 @@ class _RegisteredView extends StatelessWidget {
         _actionRow(
           isSaved: state.isSaved(result),
           onSave: () => _handleSave(context, result),
-          onRedraw: () {
+          onRedraw: () async {
+            // 다시뽑기는 광고를 끝까지 본 경우에만 진행한다.
+            if (!await confirmRedrawWithAd(context)) return;
+            if (!context.mounted) return;
             Navigator.pop(context);
             Navigator.pushNamed(context, '/draw-loading');
           },
@@ -361,7 +365,10 @@ class _StarterView extends StatelessWidget {
         _actionRow(
           isSaved: state.isSaved(result),
           onSave: () => _handleSave(context, result),
-          onRedraw: () {
+          onRedraw: () async {
+            // 다시뽑기는 광고를 끝까지 본 경우에만 진행한다.
+            if (!await confirmRedrawWithAd(context)) return;
+            if (!context.mounted) return;
             Navigator.pop(context);
             Navigator.pushNamed(context, '/draw-loading');
           },

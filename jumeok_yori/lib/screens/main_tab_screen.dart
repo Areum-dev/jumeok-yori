@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ad_banner.dart';
 import 'home_screen.dart';
 import 'jumeok_map_screen.dart';
 import 'my_store_tab_screen.dart';
@@ -51,30 +52,46 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
     return Scaffold(
       body: IndexedStack(index: safeIdx, children: screens),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: safeIdx,
-        onTap: (i) {
-          setState(() => _idx = i);
-          // IndexedStack 은 탭을 바꿔도 위젯을 다시 만들지 않아 initState 가
-          // 재실행되지 않으므로, 마이페이지 탭으로 들어올 때마다 여기서
-          // 명시적으로 최신 데이터를 다시 불러온다.
-          if (i == myPageIndex && appState.isLoggedIn) {
-            appState.loadSaved();
-            appState.loadHistory();
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.orange,
-        unselectedItemColor: AppColors.midGray,
-        backgroundColor: AppColors.white,
-        elevation: 8,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-        items: items,
+      // 하단 탭 바로 위에 작은 배너 광고. 광고를 못 불러오면 높이 0 으로 사라진다.
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBanner(),
+          _buildBottomNav(safeIdx, items, myPageIndex, appState),
+        ],
       ),
+    );
+  }
+
+  Widget _buildBottomNav(
+    int safeIdx,
+    List<BottomNavigationBarItem> items,
+    int myPageIndex,
+    AppState appState,
+  ) {
+    return BottomNavigationBar(
+      currentIndex: safeIdx,
+      onTap: (i) {
+        setState(() => _idx = i);
+        // IndexedStack 은 탭을 바꿔도 위젯을 다시 만들지 않아 initState 가
+        // 재실행되지 않으므로, 마이페이지 탭으로 들어올 때마다 여기서
+        // 명시적으로 최신 데이터를 다시 불러온다.
+        if (i == myPageIndex && appState.isLoggedIn) {
+          appState.loadSaved();
+          appState.loadHistory();
+        }
+      },
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: AppColors.orange,
+      unselectedItemColor: AppColors.midGray,
+      backgroundColor: AppColors.white,
+      elevation: 8,
+      selectedLabelStyle: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelStyle: const TextStyle(fontSize: 11),
+      items: items,
     );
   }
 }

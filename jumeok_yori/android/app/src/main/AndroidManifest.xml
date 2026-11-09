@@ -35,6 +35,11 @@
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="gtc1th04fc" />
+        <!-- Google AdMob 앱 ID (Android 앱 "주먹요리"). 비밀값이 아닌 공개 식별자.
+             이 값이 없으면 광고 SDK 초기화 시 앱이 시작하자마자 종료된다. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3603250995950186~8709904034" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

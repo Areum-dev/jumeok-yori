@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart' show AuthCanceled;
 import '../providers/app_state.dart';
 import '../repositories/auth_repository.dart';
 import '../theme/app_theme.dart';
@@ -29,6 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
   _AuthMode _mode = _AuthMode.login;
   bool _loading = false;
   bool _kakaoLoading = false;
+  bool _appleLoading = false;
   bool _obscure = true;
   String? _error;
   bool _marketingAgreed = false;
@@ -190,6 +194,9 @@ class _AuthScreenState extends State<AuthScreen> {
         _kakaoLoginPending = false;
         setState(() => _error = '카카오 로그인 화면을 열지 못했어요. 다시 시도해 주세요.');
       }
+    } on AuthCanceled {
+      // 사용자가 로그인 시트를 닫음: 오류 문구 없이 원래 화면으로.
+      _kakaoLoginPending = false;
     } catch (e) {
       _kakaoLoginPending = false;
       if (mounted) setState(() => _error = _mapError(e));
@@ -199,6 +206,24 @@ class _AuthScreenState extends State<AuthScreen> {
       // _kakaoLoginPending 은 여기서 끄지 않는다 - 브라우저가 열린 뒤에도
       // 실제 로그인 결과(딥링크 복귀)는 비동기로 나중에 도착하기 때문이다.
       if (mounted) setState(() => _kakaoLoading = false);
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    if (_appleLoading || _kakaoLoading || _loading) return;
+    setState(() {
+      _appleLoading = true;
+      _error = null;
+    });
+    try {
+      await _authRepo.signInWithApple();
+      await _afterLogin();
+    } on AuthCanceled {
+      // 사용자가 Apple 로그인 시트를 닫음: 조용히 원래 화면으로.
+    } catch (e) {
+      if (mounted) setState(() => _error = _mapError(e));
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
     }
   }
 
@@ -441,6 +466,24 @@ class _AuthScreenState extends State<AuthScreen> {
                   isLoading: _kakaoLoading,
                   onPressed: _signInWithKakao,
                 ),
+                // App Store 가이드라인 4.8: 카카오 같은 외부 로그인을 제공하면
+                // 동등한 위치에 Apple 로 로그인도 함께 제공해야 한다(iOS 한정).
+                if (Platform.isIOS) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: _appleLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : SignInWithAppleButton(
+                            text: 'Apple로 계속하기',
+                            height: 54,
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(14)),
+                            onPressed: _signInWithApple,
+                          ),
+                  ),
+                ],
               ],
               const SizedBox(height: 8),
               OutlinedButton(

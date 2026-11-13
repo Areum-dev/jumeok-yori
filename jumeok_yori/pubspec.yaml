@@ -1,7 +1,7 @@
 name: jumeok_yori
 description: 주는대로 먹는 요리 - 조건만 정하면 메뉴를 골라주는 앱
 publish_to: 'none'
-version: 1.4.1+28
+version: 1.4.1+29
 
 environment:
   sdk: ^3.12.1
@@ -50,6 +50,9 @@ dependencies:
   google_mobile_ads: ^9.2.0
   # iOS 추적 허용(ATT) 팝업 (맞춤형 광고용 광고 식별자 접근 동의)
   app_tracking_transparency: ^2.0.7
+  flutter_web_auth_2: ^5.1.0
+  sign_in_with_apple: ^8.2.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

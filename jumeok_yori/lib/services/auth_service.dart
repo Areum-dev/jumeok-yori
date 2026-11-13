@@ -1,6 +1,19 @@
+import 'dart:convert';
+import 'dart:io' show Platform;
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart' show PlatformException;
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../models/profile.dart';
+
+/// 사용자가 로그인 시트를 직접 닫았을 때 던지는 표시용 예외.
+/// 화면에서는 오류 문구 없이 조용히 무시한다.
+class AuthCanceled implements Exception {
+  const AuthCanceled();
+}
 
 /// Supabase 인증 래퍼. Supabase 미초기화 시 안전하게 동작합니다.
 class AuthService {
@@ -98,9 +111,18 @@ class AuthService {
   /// 예외 처리가 없어 iOS 에서 기본값을 그대로 씁니다). Android 는 기존에도
   /// 정상 작동했고 externalApplication 으로 바꿔도 동작 방식은 동일(외부
   /// 브라우저로 열림)하므로 플랫폼 분기 없이 공통 적용합니다.
+  ///
+  /// iOS 는 위 방식 대신 ASWebAuthenticationSession(앱 안 로그인 시트)을 쓴다.
+  /// 2026-11 App Store 심사(가이드라인 4.0)에서 "카카오 로그인 시 기본 브라우저로
+  /// 이동한다"는 이유로 반려되었기 때문. ASWebAuthenticationSession 은
+  /// 커스텀 scheme 콜백을 OS 가 직접 가로채 돌려주므로, 예전에 내장 웹뷰에서
+  /// 겪은 "흰 화면" 문제 없이 앱 안에서 로그인이 끝난다. 받은 콜백 URL 은
+  /// getSessionFromUrl 로 세션 교환하며, 성공하면 authStateChanges 에
+  /// signedIn 이벤트가 그대로 흘러가 기존 화면 로직이 동일하게 동작한다.
   Future<bool> signInWithKakao() async {
     final client = _client;
     if (client == null) throw '서버에 연결할 수 없습니다.';
+    if (Platform.isIOS) return _signInWithKakaoInApp(client);
     try {
       return await client.auth.signInWithOAuth(
         OAuthProvider.kakao,
@@ -111,6 +133,78 @@ class AuthService {
       throw _koreanError(e.message);
     } catch (_) {
       throw '카카오 로그인 중 오류가 발생했습니다.';
+    }
+  }
+
+  Future<bool> _signInWithKakaoInApp(SupabaseClient client) async {
+    try {
+      final oauth = await client.auth.getOAuthSignInUrl(
+        provider: OAuthProvider.kakao,
+        redirectTo: appDeepLinkRedirectTo,
+      );
+      final result = await FlutterWebAuth2.authenticate(
+        url: oauth.url,
+        callbackUrlScheme: Uri.parse(appDeepLinkRedirectTo).scheme,
+      );
+      await client.auth.getSessionFromUrl(Uri.parse(result));
+      return true;
+    } on PlatformException catch (e) {
+      // 사용자가 로그인 시트를 닫은 경우: 오류 문구 없이 조용히 종료.
+      if (e.code == 'CANCELED') throw const AuthCanceled();
+      throw '카카오 로그인 중 오류가 발생했습니다.';
+    } on AuthException catch (e) {
+      throw _koreanError(e.message);
+    } catch (_) {
+      throw '카카오 로그인 중 오류가 발생했습니다.';
+    }
+  }
+
+  /// Apple 로 로그인 (iOS 전용, App Store 가이드라인 4.8 대응).
+  /// 네이티브 Apple 로그인 시트에서 받은 identity token 을 Supabase 에
+  /// signInWithIdToken 으로 넘긴다. nonce 는 원문을 Supabase 에, SHA-256
+  /// 해시를 Apple 에 넘겨야 Supabase 가 토큰 위변조를 검증할 수 있다.
+  /// Supabase Dashboard > Authentication > Providers > Apple 이 켜져 있고
+  /// Client IDs 에 iOS Bundle ID(com.jumeok.jumeokYori)가 들어가 있어야 한다.
+  Future<void> signInWithApple() async {
+    final client = _client;
+    if (client == null) throw '서버에 연결할 수 없습니다.';
+    final rawNonce = client.auth.generateRawNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null) throw 'Apple 로그인 정보를 받지 못했습니다.';
+      await client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+      // Apple 은 이름을 최초 로그인 때 한 번만 준다. 받았을 때 저장해 둔다.
+      final name = [
+        credential.givenName,
+        credential.familyName,
+      ].whereType<String>().where((s) => s.isNotEmpty).join(' ');
+      if (name.isNotEmpty) {
+        await client.auth.updateUser(
+          UserAttributes(data: {'display_name': name, 'full_name': name}),
+        );
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw const AuthCanceled();
+      }
+      throw 'Apple 로그인 중 오류가 발생했습니다.';
+    } on AuthException catch (e) {
+      throw _koreanError(e.message);
+    } catch (e) {
+      if (e is String) rethrow;
+      throw 'Apple 로그인 중 오류가 발생했습니다.';
     }
   }
 
